@@ -1,0 +1,438 @@
+/* ==========================================================
+   DISCERE THEME (LIMPIO / SIN DUPLICADOS)
+   - Estructurado por secciones
+   - Incluye layout 3 columnas para Captura (d-grid--wide)
+   - Mantiene tu tamaño de card (70% / max 1200)
+   ========================================================== */
+
+/* =========================
+   1) Variables + Reset
+   ========================= */
+:root{
+  --bg: #eef2f6;            /* gris claro Discere */
+  --card: #ffffff;          /* blanco */
+  --text: #1f2a37;
+  --muted: #6b7280;
+
+  --nav: #141b33;           /* azul marino */
+  --blue: #2f6df6;          /* acento */
+  --border: #e6edf5;
+
+  --radius: 10px;
+  --shadow: 0 10px 24px rgba(16,24,40,.08);
+}
+
+*{ box-sizing: border-box; }
+
+body{
+  margin: 0;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+
+/* =========================
+   2) Header (blanco)
+   ========================= */
+.d-header{ background: #eef2f6; }
+
+.d-header__inner{
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 25px 18px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap; /* tablet */
+}
+
+.d-header__left{
+  display:flex;
+  align-items:center;
+}
+
+.d-logo{
+  height: 34px;
+  width: auto;
+}
+
+.d-brand{
+  display:flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.d-title{
+  font-size: 20px;
+  font-weight: 900;
+  letter-spacing: .3px;
+  color: #111827;
+  line-height: 1.1;
+}
+
+.d-subtitle{
+  font-size: 13px;
+  color: var(--muted);
+  margin-top: 2px;
+}
+
+.d-user{ display:flex; align-items:center; gap: 10px; }
+.d-avatar{ width: 34px; height: 34px; border-radius: 50%; border: 1px solid var(--border); }
+.d-user__hello{ font-size: 14px; color: var(--muted); }
+.d-link{ color: var(--blue); text-decoration: none; }
+.d-link:hover{ text-decoration: underline; }
+
+/* =========================
+   3) Navbar (marino)
+   ========================= */
+.d-nav{
+  max-width: 1180px;
+  margin: 16px auto 0;
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: var(--nav);
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.d-nav__item{
+  color: rgba(255,255,255,.84);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  font-size: 14px;
+}
+
+.d-nav__item:hover{ background: rgba(255,255,255,.06); }
+.d-nav__item.is-active{ color: #fff; background: rgba(47,109,246,.18); }
+
+.d-nav__sep{ width:1px; height: 22px; background: rgba(255,255,255,.16); }
+
+.d-nav__icon{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width: 22px;
+  height: 22px;
+  flex: 0 0 22px;
+}
+
+.d-ico-img{
+  width: 18px;
+  height: 18px;
+  display:block;
+  opacity: .9;
+}
+
+/* =========================
+   4) Página / Contenedor
+   ========================= */
+.d-page{
+  width: min(1860px, calc(100% - 56px));
+  margin: 16px auto 30px;
+  padding: 0;
+}
+
+/* =========================
+   5) Toolbar + Breadcrumb
+   ========================= */
+.d-toolbar{
+  display:flex;
+  justify-content: space-between;
+  align-items:center;
+  gap: 12px;
+  margin: 10px 0 14px;
+}
+
+.d-h1{
+  margin: 0;
+  font-size: 26px;
+  font-weight: 800;
+  color: #374151;
+}
+
+.d-breadcrumb{
+  display:flex;
+  align-items:center;
+  gap: 8px;
+  background: #f3f6fb;
+  border: 1px solid var(--border);
+  padding: 10px 12px;
+  border-radius: 10px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.d-bc-home{ color: var(--blue); }
+.d-bc-sep{ opacity: .6; }
+
+/* =========================
+   6) Card
+   (Mantiene tu tamaño: 70% / max 1200)
+   ========================= */
+.d-card{
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 14px;
+
+  width: 70%;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.d-card__header{
+  display:flex;
+  justify-content: space-between;
+  align-items:center;
+  gap: 12px;
+  padding: 6px 6px 12px;
+}
+
+.d-card__title{
+  font-weight: 700;
+  color: #374151;
+}
+
+/* =========================
+   7) Toggle
+   ========================= */
+.d-toggle{
+  display:flex;
+  gap: 10px;
+  align-items:center;
+  border: 1px solid var(--border);
+  background: #f8fafc;
+  padding: 8px 12px;
+  border-radius: 10px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.d-toggle input{ transform: scale(1.15); }
+
+
+
+/* =========================
+   9) Cámara / Viewport
+   (Mantiene tu tamaño actual)
+   ========================= */
+.d-viewport{
+  position: relative;
+  width: 100%;
+
+  /* tu preferencia actual */
+  height: clamp(120px, 42vh, 660px);
+  aspect-ratio: auto;
+
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  background: #0b1220;
+}
+
+.d-viewport > video,
+.d-viewport > canvas{
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Si NO quieres el círculo/overlay, déjalo así (lo oculta aunque exista en HTML) */
+.d-overlay{ display: none; }
+
+/* =========================
+   10) Loading
+   ========================= */
+.d-loading{
+  position:absolute;
+  inset:0;
+  display:none;
+  place-items:center;
+  gap: 10px;
+  background: rgba(0,0,0,.35);
+  color: #fff;
+}
+.d-loading.is-on{ display:grid; }
+
+.d-spinner{
+  width: 34px; height: 34px;
+  border-radius: 50%;
+  border: 3px solid rgba(255,255,255,.22);
+  border-top-color: rgba(255,255,255,.9);
+  animation: spin .9s linear infinite;
+}
+@keyframes spin{ to{ transform: rotate(360deg); } }
+
+/* =========================
+   11) Botones
+   ========================= */
+.d-actions{
+  margin-top: 12px;
+  display:grid;
+  grid-template-columns: 1fr 1.35fr 1fr; /* centro más ancho */
+  gap: 10px;
+}
+
+.d-btn{
+  height: 42px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: #f8fafc;
+  color: #374151;
+  font-weight: 700;
+  cursor: pointer;
+}
+.d-btn:hover{ background: #f1f5f9; }
+.d-btn:disabled{ opacity:.6; cursor:not-allowed; }
+
+.d-btn--primary{
+  background: var(--blue);
+  color: #fff;
+  border-color: rgba(47,109,246,.35);
+}
+.d-btn--primary:hover{ filter: brightness(.98); }
+
+.d-btn--success{
+  background: #16a34a;
+  color: #fff;
+  border-color: rgba(22,163,74,.35);
+}
+
+.d-btn--danger{
+  background: #ef4444;
+  color: #fff;
+  border-color: rgba(239,68,68,.35);
+}
+
+#btnShot{
+  height: 46px;
+  font-weight: 800;
+  font-size: 14px;
+}
+
+/* =========================
+   12) Status
+   ========================= */
+.d-status{
+  margin-top: 10px;
+  border: 1px dashed var(--border);
+  background: #fbfdff;
+  border-radius: 10px;
+  padding: 10px 12px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+/* =========================
+   13) Side / Meta / Tipbox
+   ========================= */
+.d-side__title{
+  font-weight: 700;
+  color: #374151;
+  margin: 6px 0 10px;
+}
+
+.d-preview{
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow:hidden;
+  background: #f8fafc;
+}
+.d-preview img{ width: 100%; display:block; }
+
+.d-meta{ margin-top: 12px; }
+
+.d-meta__row{
+  display:flex;
+  justify-content: space-between;
+  gap: 10px;
+  border: 1px solid var(--border);
+  background: #fbfdff;
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+
+.d-meta__label{ color: var(--muted); font-size: 13px; }
+.d-meta__value{ font-weight: 700; color: #374151; font-size: 13px; }
+
+.d-tipbox{
+  margin-top: 12px;
+  border: 1px solid var(--border);
+  background: #fbfdff;
+  border-radius: 10px;
+  padding: 10px 12px;
+  color: var(--muted);
+  font-size: 13px;
+}
+.d-tipbox__title{ font-weight: 700; color: #374151; margin-bottom: 8px; }
+.d-tipbox ul{ margin: 0; padding-left: 18px; }
+.d-tipbox li{ margin: 6px 0; }
+
+/* =========================
+   14) Footer
+   ========================= */
+.d-footer{
+  max-width: 1180px;
+  margin: 18px auto 28px;
+  padding: 0 18px;
+  color: #8a94a6;
+  font-size: 13px;
+  display:flex;
+  justify-content: space-between;
+}
+
+.d-footer span:last-child{
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.d-footer .d-ico-img{
+  width: 14px;
+  height: 14px;
+  display: inline-block;
+}
+
+/* =========================
+   15) Toast
+   ========================= */
+.d-toast{
+  position: fixed;
+  left: 50%;
+  bottom: 16px;
+  transform: translateX(-50%);
+  background: rgba(17,24,39,.92);
+  color: #fff;
+  padding: 10px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.12);
+  display:none;
+}
+.d-toast.is-on{ display:block; }
+
+/* =========================
+   16) Responsive Header
+   ========================= */
+@media (max-width: 768px){
+  .d-header__inner{ padding: 12px 14px; }
+  .d-subtitle{ display:none; }
+}
+
+@media (max-width: 480px){
+  .d-header__inner{
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  .d-header__right{ width: 100%; }
+  .d-user{ justify-content: flex-start; }
+}

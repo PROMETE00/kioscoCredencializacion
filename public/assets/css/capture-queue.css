@@ -1,0 +1,43 @@
+/* ===========================================
+   GRID 3 COLS: centro fijo, laterales se "meten"
+   =========================================== */
+
+/* Ajusta este ancho a tu gusto SIN que cambie el centro */
+body.capture-dark .d-grid-3{
+  --centerW: 720px;        /* <- ancho fijo del centro (ej. 680-760) */
+  --gap: 6px;              /* separación entre paneles */
+
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) var(--centerW) minmax(0, 1fr) !important;
+  gap: var(--gap) !important;
+
+  align-items: start;
+}
+
+/* En pantallas más chicas, 1 columna */
+@media (max-width: 1100px){
+  body.capture-dark .d-grid-3{
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* IMPORTANTE: anula el .d-card global (width:70% / margin:auto) dentro del grid */
+body.capture-dark .d-grid-3 > .d-card{
+  width: 100% !important;
+  max-width: none !important;
+  margin: 0 !important;
+}
+
+/* Panel IZQ: que se pegue al centro (su espacio libre queda hacia la izquierda/afuera) */
+body.capture-dark .d-grid-3 > aside.d-panel:first-child{
+  width: 320px;            /* ancho real del panel izquierdo */
+  justify-self: end;       /* <- lo empuja hacia el centro */
+  margin: 0;
+}
+
+/* Panel DER: que se pegue al centro (su espacio libre queda hacia la derecha/afuera) */
+body.capture-dark .d-grid-3 > aside.d-panel:last-child{
+  width: 360px;            /* ancho real del panel derecho */
+  justify-self: start;     /* <- lo empuja hacia el centro */
+  margin: 0;
+}
