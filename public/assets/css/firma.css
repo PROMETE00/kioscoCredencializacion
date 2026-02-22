@@ -1,0 +1,237 @@
+/* =========================================================
+   OVERRIDE: paneles pegados al centro + centro más grande
+   (PÉGALO AL FINAL del CSS)
+   ========================================================= */
+
+.d-capture-wrap{
+  max-width: 1680px;
+  margin: 0 auto;
+  padding: 18px 10px;
+}
+
+/* ✅ Empaqueta las 3 columnas al centro aunque el contenedor sea ancho */
+.d-capture-grid{
+  width: 100%;
+  display: grid;
+
+  /* Izq / Centro / Der (centro más grande) */
+  grid-template-columns: 400px minmax(860px, 980px) 320px;
+
+  gap: 14px;
+  align-items: start;
+
+  /* ✅ CLAVE: junta y centra los tracks */
+  justify-content: center;
+}
+
+/* ✅ CLAVE: que cada panel se ESTIRE al ancho de su track */
+.d-capture-grid > *{
+  width: 100%;
+  justify-self: stretch;
+}
+
+/* Asegura que la card llene el panel (especialmente la cola derecha) */
+.d-panel, .d-center{
+  width: 100%;
+}
+.d-panel .d-card,
+.d-center .d-card{
+  width: 100%;
+}
+
+/* Responsive (no lo rompe) */
+@media (max-width: 1240px){
+  .d-capture-grid{
+    grid-template-columns: 360px 1fr 320px;
+    justify-content: stretch;
+  }
+}
+
+@media (max-width: 980px){
+  .d-capture-grid{
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Cards */
+.d-card{
+  background:#fff;
+  border: 1px solid rgba(0,0,0,.06);
+  border-radius: 12px;
+  padding: 17px;
+  box-shadow: 0 8px 24px rgba(0,0,0,.05);
+}
+
+.d-card-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.d-card-title{
+  font-weight: 800;
+  color: #2f3b52;
+}
+
+.d-badge{
+  min-width: 24px;
+  height: 24px;
+  padding: 0 8px;
+  border-radius: 999px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  font-weight: 700;
+  background: #eef2ff;
+  color:#334155;
+  border: 1px solid rgba(0,0,0,.06);
+}
+
+.d-input{
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(0,0,0,.10);
+  outline: none;
+  margin-bottom: 10px;
+  background: #fbfdff;
+}
+
+/* Alumno en captura */
+.d-dl{ margin: 0; }
+.d-dl-row{
+  display:flex;
+  justify-content:space-between;
+  gap: 10px;
+  padding: 6px 0;
+  border-bottom: 1px dashed rgba(0,0,0,.06);
+}
+.d-dl-row:last-child{ border-bottom: none; }
+.d-dl dt{ color:#6b7280; font-weight: 700; }
+.d-dl dd{ margin: 0; color:#111827; font-weight: 700; text-align:right; }
+
+.d-pill{
+  display:inline-flex;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background:#eef2f7;
+  border: 1px solid rgba(0,0,0,.06);
+  font-weight: 800;
+}
+
+.d-tip{
+  margin-top: 10px;
+  color:#6b7280;
+  font-size: 13px;
+}
+
+/* Firma */
+.d-check{
+  display:flex;
+  align-items:center;
+  gap: 8px;
+  color:#64748b;
+  font-size: 13px;
+  user-select:none;
+}
+
+.d-pad-wrap{
+  border-radius: 12px;
+  overflow:hidden;
+  border: 1px solid rgba(0,0,0,.08);
+  background:#fff;
+}
+
+.d-pad{
+  width:100%;
+  height: 420px;
+  display:block;
+  touch-action:none;
+}
+
+.d-actions{
+  display:grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.d-btn{
+  border-radius: 10px;
+  padding: 10px 12px;
+  border: 1px solid rgba(0,0,0,.10);
+  background: #eef2ff;
+  font-weight: 800;
+  cursor:pointer;
+}
+.d-btn:disabled{
+  opacity: .55;
+  cursor:not-allowed;
+}
+.d-btn--primary{
+  background:#71c58a;
+  border-color: rgba(0,0,0,.10);
+}
+
+.d-status{
+  margin-top: 10px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px dashed rgba(0,0,0,.15);
+  color:#64748b;
+  font-size: 13px;
+  background:#fbfdff;
+}
+
+.d-subtitle{
+  margin-top: 14px;
+  font-weight: 800;
+  color:#2f3b52;
+}
+
+.d-preview{
+  margin-top: 8px;
+  border-radius: 12px;
+  border: 1px solid rgba(0,0,0,.08);
+  background:#fbfdff;
+  min-height: 56px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding: 12px;
+}
+.d-preview img{
+  max-width: 100%;
+  max-height: 140px;
+  object-fit: contain;
+}
+.d-preview-empty{ color:#64748b; }
+
+/* Cola */
+.d-queue{
+  display:flex;
+  flex-direction:column;
+  gap: 10px;
+  max-height: 540px;
+  overflow:auto;
+  padding-right: 4px;
+}
+
+.d-queue-item{
+  border: 1px solid rgba(0,0,0,.08);
+  border-radius: 12px;
+  padding: 10px;
+  background:#fff;
+  cursor:pointer;
+  display:flex;
+  justify-content:space-between;
+  gap: 10px;
+}
+.d-queue-item:hover{
+  background:#f8fafc;
+}
+
+.d-queue-name{ font-weight: 900; color:#111827; }
+.d-queue-meta{ color:#64748b; font-weight: 700; font-size: 12px; text-align:right; }

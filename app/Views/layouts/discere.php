@@ -59,7 +59,7 @@
   <div class="d-nav__sep"></div>
 
   <a class="d-nav__item <?= ($activeMenu ?? '') === 'Firma' ? 'is-active' : '' ?>"
-     href="#">
+   href="<?= site_url('captura/firma') ?>">
 
     <span class="d-nav__icon" aria-hidden="true">
       <img class="d-ico-img" src="<?= base_url('assets/img/signatureSVG.svg') ?>" alt="">

@@ -8,3 +8,10 @@ use CodeIgniter\Router\RouteCollection;
 $routes->get('/', 'Home::index');
 $routes->get('captura', 'CameraController::index');
 $routes->post('captura/guardar', 'CameraController::save');
+
+$routes->get('captura/firma', 'FirmaController::index');
+$routes->get('captura/firma/(:num)', 'FirmaController::index/$1');
+
+$routes->get('captura/firma/cola', 'FirmaController::cola');
+$routes->post('captura/firma/guardar', 'FirmaController::guardar');
+

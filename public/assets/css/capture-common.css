@@ -1,0 +1,200 @@
+/* =========================================================
+   CAPTURE COMMON
+   - Fondo + layout compacto + panel alumno + cola
+   - Se usa en: Foto, Firma, Huella
+   ========================================================= */
+
+/* Fondo tipo screenshot (solo en páginas de captura) */
+body.capture-dark .d-page{
+  background: #eef3f7;
+  padding: 26px 0 52px;
+}
+
+/* Wrapper para centrar el “bloque” de 3 paneles */
+.d-capture-wrap{
+  max-width: 1680px;
+  margin: 0 auto;
+  padding: 0 16px;
+}
+
+/* ===== Layout 3 columnas compacto (paneles cerca del centro) ===== */
+.d-grid-3{
+  width: 100%;
+  display: grid;
+
+  /* izq / centro / der (centro grande con límites) */
+  grid-template-columns: 360px minmax(820px, 980px) 360px;
+
+  gap: 18px;
+  align-items: start;
+
+  /* ✅ clave: centra el conjunto de tracks */
+  justify-content: center;
+}
+
+/* ✅ clave: que cada columna use todo su track */
+.d-grid-3 > *{
+  width: 100%;
+  justify-self: stretch;
+}
+
+/* Responsive */
+@media (max-width: 1240px){
+  .d-grid-3{
+    grid-template-columns: 340px 1fr 340px;
+    justify-content: stretch;
+  }
+}
+@media (max-width: 980px){
+  .d-grid-3{
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ===== Cards laterales (panel) ===== */
+.d-panel{
+  background:#fff;
+  border: 1px solid rgba(15, 23, 42, .08);
+  border-radius: 14px;
+  box-shadow: 0 10px 28px rgba(15, 23, 42, .06);
+  padding: 16px;
+}
+
+.d-panel__title{
+  font-weight: 900;
+  color:#0f172a;
+  margin:0 0 10px;
+}
+
+/* ===== Panel Alumno (KV) ===== */
+.d-kv{
+  display: grid;
+  gap: 10px;
+  font-size: 14px;
+  color:#0f172a;
+}
+
+.d-kv .lbl{
+  color: #667085;
+  font-weight: 800;
+  margin-right: 6px;
+}
+
+/* estatus pill */
+.d-badge{
+  display:inline-flex;
+  align-items:center;
+  padding:6px 10px;
+  border-radius:999px;
+  background:#f3f6fb;
+  border:1px solid rgba(15, 23, 42, .10);
+  font-size:12px;
+  color:#334155;
+  font-weight:900;
+}
+
+.d-tip{
+  margin:12px 0 0;
+  color:#667085;
+  font-size:13px;
+}
+
+/* ===== Cola ===== */
+.d-queueTop{
+  display:flex;
+  gap:10px;
+  align-items:center;
+  justify-content:space-between;
+}
+
+.d-search{
+  width:100%;
+  padding:10px 12px;
+  border-radius:10px;
+  border:1px solid rgba(15, 23, 42, .12);
+  outline:none;
+  background:#fbfdff;
+}
+
+.d-queueList{
+  margin:12px 0 0;
+  padding:0;
+  list-style:none;
+  display:grid;
+  gap:10px;
+  max-height: 560px;
+  overflow:auto;
+}
+
+/* item cola */
+.d-qItem{
+  border:1px solid rgba(15, 23, 42, .10);
+  background:#ffffff;
+  border-radius:12px;
+  padding:10px 12px;
+  cursor:pointer;
+  box-shadow: 0 6px 14px rgba(15, 23, 42, .04);
+}
+.d-qItem:hover{ background:#f8fafc; }
+.d-qItem.is-active{
+  border-color: rgba(47,109,246,.45);
+  box-shadow: 0 0 0 3px rgba(47,109,246,.10);
+}
+
+.d-qName{
+  font-weight: 900;
+  color:#0f172a;
+  font-size: 13px;
+}
+.d-qMeta{
+  color:#667085;
+  font-size:12px;
+  margin-top:4px;
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+}
+
+/* ===== Centro (card principal) =====
+   Solo “espaciados” para evitar inline styles repetidos */
+.d-card--stage{ padding: 14px; }
+.d-card__header--tight{ padding: 0 0 12px; }
+
+.d-actions--3{
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.d-stageBlock{ margin-top: 12px; }
+.d-meta--tight{ margin-top: 10px; }
+
+/* --- FIX: discere-theme limita d-card (70% / max 1200).
+   En captura debe ocupar toda su columna. --- */
+.d-grid-3 > .d-card{
+  width: 100%;
+  max-width: none;
+  margin: 0;
+}
+
+/* FIX: línea final (sin coma) */
+.d-meta--tight{ margin-top: 10px; }
+
+/* Estilos comunes para la captura: recuadros con fondo blanco */
+.d-panel,
+.d-capture-wrap .d-panel,
+.d-capture-wrap .d-stage {
+    background: var(--card);             /* blanco definido en el tema */
+    border: 1px solid var(--border);     /* mismo borde que las tarjetas */
+    border-radius: var(--radius);        /* esquinas redondeadas */
+    box-shadow: var(--shadow);           /* sombra suave */
+    padding: 14px;
+}
+
+/* Ajustes para elementos internos (vista previa, meta, tipbox, estado) */
+.d-panel .d-preview,
+.d-panel .d-meta__row,
+.d-panel .d-tipbox,
+.d-stage .d-status {
+    background: #fbfdff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+}
