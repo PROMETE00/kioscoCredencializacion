@@ -15,3 +15,5 @@ $routes->get('captura/firma/(:num)', 'FirmaController::index/$1');
 $routes->get('captura/firma/cola', 'FirmaController::cola');
 $routes->post('captura/firma/guardar', 'FirmaController::guardar');
 
+$routes->get('/admin', 'DashboardController::index');
+$routes->get('/admin/dashboard', 'DashboardController::index');

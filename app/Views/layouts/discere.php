@@ -34,15 +34,15 @@
   </div>
 </header>
 <nav class="d-nav">
-  <a class="d-nav__item <?= ($activeMenu ?? '') === 'General' ? 'is-active' : '' ?>"
-     href="<?= site_url('captura') ?>">
+ <a class="d-nav__item <?= ($activeMenu ?? '') === 'Dashboard' ? 'is-active' : '' ?>"
+   href="<?= site_url('admin') ?>">
 
-    <span class="d-nav__icon" aria-hidden="true">
-      <img class="d-ico-img" src="<?= base_url('assets/img/homeSVG.svg') ?>" alt="">
-    </span>
+  <span class="d-nav__icon" aria-hidden="true">
+    <img class="d-ico-img" src="<?= base_url('assets/img/homeSVG.svg') ?>" alt="">
+  </span>
 
-    General
-  </a>
+  General
+</a>
 
   <div class="d-nav__sep"></div>
 
