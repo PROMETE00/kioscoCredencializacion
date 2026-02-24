@@ -3,7 +3,7 @@
 ?>
 
 <aside class="d-side d-panel d-person">
-  <div class="d-side__title">Alumno en captura</div>
+  <div class="d-card-title">Alumno en captura</div>
 
   <div class="d-meta">
     <div class="d-meta__row">

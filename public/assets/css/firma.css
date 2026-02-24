@@ -152,10 +152,14 @@
 }
 
 .d-actions{
-  display:grid;
+  display: flex;
+  justify-content: space-between;
   grid-template-columns: 1fr 1fr 1fr;
   gap: 10px;
   margin-top: 10px;
+}
+.d-actions .d-btn{
+  width: 48%;
 }
 
 .d-btn{

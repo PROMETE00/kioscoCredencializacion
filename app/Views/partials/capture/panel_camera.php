@@ -35,12 +35,10 @@
     <button class="d-btn d-btn--success" id="btnSave" disabled>Guardar</button>
   </div>
 
-  <div class="d-status" id="status">Listo. Inicia cámara, selecciona alumno de cola y captura.</div>
-
-  <div class="d-side__title" style="margin-top: 14px;">Vista previa</div>
-  <div class="d-preview">
-    <img id="preview" alt="Vista previa">
-  </div>
+<div class="d-side__title">Vista previa</div>
+<div class="d-preview">
+  <img id="preview">
+</div>
 
   <div class="d-meta" style="margin-top: 12px;">
     <div class="d-meta__row">
