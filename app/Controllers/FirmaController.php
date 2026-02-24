@@ -2,31 +2,32 @@
 
 namespace App\Controllers;
 
+use App\Models\FirmaModel;
+
 class FirmaController extends BaseController
 {
-  public function index($turnoId = 0)
-  {
-    // Aquí luego lo conectas a tu BD real
-    $data = [
-      'title'      => 'Firma',
-      'activeMenu' => 'Firma',
-      'userName'   => 'Usuario',
+    public function index($turnoId = 0)
+    {
+        $model = new FirmaModel();
 
-      'turno'  => ['id' => (int)$turnoId, 'turno' => 'A-013'],
-      'alumno' => ['id' => 1, 'nombre' => 'SOLANO RAMOS EDUARDO'],
+        // 1) Alumno “en captura”: si viene turnoId, trae ese; si no, trae el siguiente pendiente
+        $current = ($turnoId > 0)
+            ? $model->getCurrentByTurno((int)$turnoId)
+            : $model->getNextPending();
 
-      'firmaUrl'    => null,
-      'miniUrl'     => null,
-      'estadoTexto' => 'FIRMA EN CAPTURA',
-      'estadoType'  => 'warn',
+        // 2) Cola de pendientes (para el panel derecho)
+        $queue = $model->getQueue();
 
-      'enCaptura' => ['nombre' => 'SOLANO RAMOS EDUARDO', 'turno' => 'A-013'],
-      'fila'      => [
-        ['nombre' => 'PÉREZ LÓPEZ ANA', 'turno' => 'A-014'],
-        ['nombre' => 'GARCÍA JUÁREZ LUIS', 'turno' => 'A-015'],
-      ],
-    ];
+        $data = [
+            'title'      => 'Captura de Firma',
+            'activeMenu' => 'firma',
+            'userName'   => 'Usuario',
 
-    return view('captura/firma', $data);
-  }
+            // Para tu vista “tipo foto”:
+            'current' => $current,   // null o array con nombre/no_control/carrera/semestre/estatus/id/turno_id
+            'queue'   => $queue,     // array de alumnos en cola
+        ];
+
+        return view('captura/firma', $data);
+    }
 }

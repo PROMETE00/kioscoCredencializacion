@@ -1,0 +1,28 @@
+/* ===== Layout común 3 columnas (igual en Foto/Firma/Huella) ===== */
+.d-capture-wrap{
+  max-width: 1680px;
+  margin: 0 auto;
+  padding: 18px 10px;
+}
+
+.d-grid-3{
+  display: grid;
+  grid-template-columns: 320px minmax(860px, 980px) 360px;
+  gap: 14px;
+  align-items: start;
+  justify-content: center;
+}
+
+@media (max-width: 1100px){
+  .d-grid-3{ grid-template-columns: 1fr; }
+}
+
+/* CLAVE: evita que .d-card global (70% + margin:auto) rompa el grid */
+.d-grid-3 .d-card{
+  width: 100% !important;
+  max-width: none !important;
+  margin: 0 !important;
+}
+
+/* opcional: los hijos se estiran al track */
+.d-grid-3 > *{ width: 100%; }

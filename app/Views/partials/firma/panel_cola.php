@@ -8,7 +8,7 @@
       <span class="d-badge" id="colaCount"><?= count($queue) ?></span>
     </div>
 
-    <input class="d-input" id="colaSearch" placeholder="Buscar por nombre o control..." />
+    <input class="d-input" id="colaSearch" placeholder="Buscar por nombre o Numero de control" />
 
     <div class="d-queue" id="colaList">
       <!-- items por JS -->

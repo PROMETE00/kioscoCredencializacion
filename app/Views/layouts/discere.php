@@ -70,15 +70,15 @@
 
   <div class="d-nav__sep"></div>
 
-  <a class="d-nav__item <?= ($activeMenu ?? '') === 'huella' ? 'is-active' : '' ?>"
-     href="#">
+ <a class="d-nav__item <?= ($activeMenu ?? '') === 'huella' ? 'is-active' : '' ?>"
+   href="<?= site_url('captura/huella') ?>">
 
-    <span class="d-nav__icon" aria-hidden="true">
-      <img class="d-ico-img" src="<?= base_url('assets/img/touchSVG.svg') ?>" alt="">
-    </span>
+  <span class="d-nav__icon" aria-hidden="true">
+    <img class="d-ico-img" src="<?= base_url('assets/img/touchSVG.svg') ?>" alt="">
+  </span>
 
-    Huella
-  </a>
+  Huella
+</a>
 
   <div class="d-nav__sep"></div>
 
