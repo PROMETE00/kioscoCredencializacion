@@ -58,7 +58,7 @@
 
   <div class="d-nav__sep"></div>
 
-  <a class="d-nav__item <?= ($activeMenu ?? '') === 'Firma' ? 'is-active' : '' ?>"
+  <a class="d-nav__item <?= ($activeMenu ?? '') === 'firma' ? 'is-active' : '' ?>"
    href="<?= site_url('captura/firma') ?>">
 
     <span class="d-nav__icon" aria-hidden="true">

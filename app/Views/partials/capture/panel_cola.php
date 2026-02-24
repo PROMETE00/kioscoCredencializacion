@@ -3,16 +3,18 @@
   $queue = $queue ?? [];
 ?>
 
-<aside class="d-side d-queue">
-  <div class="d-side__title" style="display:flex; justify-content:space-between; align-items:center;">
-    <span><?= esc($title) ?></span>
+<aside class="d-panel d-queue">
+  <div class="d-card-head" >
+    <div class="d-card-title"><?= esc($title) ?></div>
     <span class="d-badge" id="qCount"><?= count($queue) ?></span>
   </div>
 
-  <div class="d-tipbox" style="margin-top: 0;">
+
     <input id="qSearch" type="text" placeholder="Buscar por nombre o control..."
            class="d-search">
-  </div>
 
-  <div id="queueList" class="d-queueList"></div>
+
+  <div id="queueList" class="d-queueList">
+    
+  </div>
 </aside>

@@ -198,3 +198,17 @@ body.capture-dark .d-page{
     border: 1px solid var(--border);
     border-radius: var(--radius);
 }
+
+
+.d-card-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.d-card-title{
+  font-weight: 800;
+  color: #2f3b52;
+}

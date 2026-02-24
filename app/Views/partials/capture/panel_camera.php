@@ -5,7 +5,7 @@
 
 <section class="d-stage d-camera">
   <div class="d-card__header">
-    <div class="d-card__title"><?= esc($title) ?></div>
+    <div class="d-card__title"><!--?= esc($title) ?--></div>
 
     <label class="d-toggle">
       <input id="chkWhiteBg" type="checkbox" checked>

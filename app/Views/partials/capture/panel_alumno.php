@@ -26,11 +26,6 @@
       <span class="d-meta__label">Estatus</span>
       <span class="d-meta__value" id="alEstatus"><?= esc($current['estatus'] ?? '—') ?></span>
     </div>
-
-    <div class="d-tipbox">
-      <div class="d-tipbox__title">Tip</div>
-      Selecciona un alumno de la cola para cargarlo aquí.
-    </div>
   </div>
 
   <input type="hidden" id="studentId" value="<?= esc($current['id'] ?? '') ?>">

@@ -79,7 +79,6 @@
               <td><span class="<?= $badge($r['imprime']) ?>"><?= esc($r['imprime']) ?></span></td>
               <td class="mono"><?= esc($r['updated_at']) ?></td>
               <td>
-                <!-- TODO: aquí conectas a tu expediente 360 -->
                 <a class="d-btn d-btn--tiny" href="#">Abrir</a>
               </td>
             </tr>

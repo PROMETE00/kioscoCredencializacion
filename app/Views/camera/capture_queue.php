@@ -1,6 +1,5 @@
 <?= $this->extend('layouts/discere') ?>
-
-<?= $this->section('bodyClass') ?>capture-dark<?= $this->endSection() ?>
+<?php $this->setVar('activeMenu', 'fotografia'); ?>
 
 <?= $this->section('head') ?>
   <!-- CSS módulo + CSS común (reemplaza el <style> inline) -->
@@ -13,10 +12,6 @@
 <?= $this->endSection() ?>
 
 <?= $this->section('content') ?>
-
-<div class="d-toolbar">
-  <!-- vacío de momento pero sirve para implementar toolbar global si se requiere -->
-</div>
 
 <?php
   // Control de overlay (círculo). Cámbialo a true si lo quieres.
