@@ -1,0 +1,108 @@
+/* ===== User Dropdown (dark) ===== */
+.u-menu{ position: relative; display:flex; justify-content:flex-end;z-index: 9999;  }
+
+.u-trigger{
+  display:flex;
+  align-items:center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(17,24,39,.12);
+  background: rgba(255,255,255,.0);
+  cursor: pointer;
+  transition: transform .08s ease, background .15s ease;
+}
+.u-trigger:hover{ background: rgba(17,24,39,.04); }
+.u-trigger:active{ transform: translateY(1px); }
+
+.u-hello{
+  font-size: 13px;
+  color: #6b7280;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.u-hello strong{ color:#111827; font-weight: 900; }
+
+.u-avatar{
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background:
+    radial-gradient(12px 12px at 30% 30%, rgba(122,167,255,.55), transparent 60%),
+    radial-gradient(16px 16px at 70% 60%, rgba(47,109,246,.45), transparent 60%),
+    #111827;
+  border: 1px solid rgba(17,24,39,.10);
+  box-shadow: 0 8px 22px rgba(0,0,0,.10);
+}
+
+
+/* Dropdown (light) */
+.u-dd{
+  position:absolute;
+  right: 0;
+  top: calc(100% + 10px);
+  width: 180px;
+
+  background: #ffffff;                         /* claro */
+  border: 1px solid rgba(15,23,42,.10);
+  border-radius: 14px;
+  box-shadow: 0 18px 48px rgba(2,6,23,.18);    /* sombra suave */
+  overflow: hidden;
+
+  opacity: 0;
+  transform: translateY(-6px) scale(.98);
+  pointer-events: none;
+  transition: opacity .16s ease, transform .16s ease;
+  z-index: 99999;
+}
+
+.u-menu.is-open .u-dd{
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  pointer-events: auto;
+}
+
+/* Items (light) */
+.u-item{
+  display:flex;
+  align-items:center;
+  gap: 10px;
+  padding: 10px 12px;
+  color: #0f172a;                 /* texto oscuro */
+  font-size: 13px;
+  font-weight: 850;
+  text-decoration:none;
+  background: transparent;
+  transition: background .14s ease, transform .08s ease;
+}
+
+.u-item:hover{ background: rgba(15,23,42,.06); }
+
+.u-ico{
+  width: 18px;
+  text-align:center;
+  opacity: .95;
+}
+
+.u-sep{
+  height: 1px;
+  background: rgba(15,23,42,.10);
+  margin: 6px 0;
+}
+
+/* Danger item */
+.u-item--danger{
+  color: rgb(251, 0, 0);
+  background: rgba(255, 0, 0, 0.350);
+}
+.u-item--danger:hover{
+  background: rgba(232, 0, 0, 0.500);
+}
+/* Si tu header no está encima, súbelo también */
+.d-header{
+  position: relative;
+  z-index: 9990;
+}
+
+.u-ico{ width: 18px; display:flex; align-items:center; justify-content:center; }
+.u-ico-img{ width: 16px; height: 16px; display:block; }

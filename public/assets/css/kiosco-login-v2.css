@@ -1,0 +1,244 @@
+:root{
+  --white: #ffffff;
+  --blue:  #2f6df6;     /* azul institucional (Discere-like) */
+  --navy:  #0b2a6f;     /* azul marino serio */
+  --sky:   #7fb4ff;     /* azul claro */
+  --ice:   #eaf2ff;     /* fondo frío */
+  --ink:   #0f172a;
+  --muted: #64748b;
+  --border: rgba(15,23,42,.10);
+  --shadow: 0 18px 55px rgba(2,6,23,.14);
+  --radius: 22px;
+}
+
+*{ box-sizing:border-box; }
+
+body.kl2{
+  margin:0;
+  min-height:100vh;
+  background: #f6f7fb; /* institucional claro */
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Arial, sans-serif;
+  color: var(--ink);
+  display:grid;
+  place-items:center;
+  padding: 18px;
+}
+
+.kl2-wrap{
+  width: min(1080px, 100%);
+  min-height: min(640px, 92vh);
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  display:grid;
+  grid-template-columns: 1fr 1.05fr; /* parecido a la referencia */
+}
+
+@media (max-width: 980px){
+  .kl2-wrap{ grid-template-columns: 1fr; }
+  .kl2-right{ display:none; } /* en móvil ocultamos panel derecho */
+}
+
+/* ===== Left ===== */
+.kl2-left{
+  padding: 44px 48px;
+}
+
+.kl2-brand{
+  display:flex;
+  align-items:center;
+  gap: 10px;
+  font-weight: 900;
+  color: #111827;
+  margin-bottom: 26px;
+}
+
+.kl2-dot{
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  background: linear-gradient(135deg, var(--blue), var(--navy));
+  box-shadow: 0 0 0 4px rgba(47,109,246,.12);
+}
+
+.kl2-brand__name{
+  letter-spacing: .2px;
+  opacity: .95;
+}
+
+.kl2-h1{
+  margin: 0;
+  font-size: 42px;
+  line-height: 1.05;
+  font-weight: 1000;
+  color: #0b1220;
+}
+
+.kl2-sub{
+  margin: 14px 0 26px;
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 650;
+  max-width: 420px;
+}
+
+.kl2-alert{
+  border: 1px solid rgba(239,68,68,.22);
+  background: rgba(239,68,68,.08);
+  color: #991b1b;
+  border-radius: 14px;
+  padding: 10px 12px;
+  font-weight: 900;
+  font-size: 13px;
+  margin-bottom: 14px;
+}
+
+.kl2-form{
+  display:grid;
+  gap: 14px;
+  max-width: 420px;
+}
+
+.kl2-field{ display:grid; gap: 8px; }
+.kl2-label{
+  font-size: 13px;
+  font-weight: 900;
+  color: #475569;
+}
+
+.kl2-input{
+  height: 44px;
+  padding: 0 14px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: #fbfdff;
+  outline:none;
+  transition: box-shadow .15s ease, border-color .15s ease;
+}
+
+.kl2-input:focus{
+  border-color: rgba(47,109,246,.35);
+  box-shadow: 0 0 0 3px rgba(47,109,246,.12);
+}
+
+.kl2-row{
+  display:flex;
+  justify-content: space-between;
+  align-items:center;
+  gap: 10px;
+  margin-top: 2px;
+}
+
+.kl2-check{
+  display:flex;
+  align-items:center;
+  gap: 8px;
+  font-size: 13px;
+  color: #475569;
+  font-weight: 750;
+}
+.kl2-check input{ accent-color: var(--purple); }
+
+.kl2-link{
+  font-size: 13px;
+  font-weight: 850;
+  text-decoration:none;
+  color: rgba(47,109,246,.95);
+}
+.kl2-link:hover{ text-decoration: underline; }
+
+/* Botón institucional (azul) */
+.kl2-btn{
+  height: 44px;
+  border-radius: 12px;
+  border: 1px solid rgba(47,109,246,.55);
+  background: linear-gradient(180deg, rgba(47,109,246,1), rgba(47,109,246,.82));
+  color: #fff;
+  font-weight: 1000;
+  letter-spacing: .2px;
+  cursor:pointer;
+  box-shadow: 0 14px 34px rgba(47,109,246,.18);
+  transition: transform .08s ease, filter .15s ease, box-shadow .15s ease;
+}
+
+.kl2-btn:hover{
+  filter: brightness(1.03);
+  box-shadow: 0 16px 40px rgba(47,109,246,.22);
+}
+.kl2-btn:active{ transform: translateY(1px); }
+
+.kl2-foot{
+  margin-top: 8px;
+  color: rgba(100,116,139,.85);
+  font-size: 12px;
+  font-weight: 650;
+}
+
+/* ===== Right (ilustración) ===== */
+.kl2-right{
+  position: relative;
+  display:grid;
+  place-items:center;
+  padding: 18px;
+  background: linear-gradient(135deg, rgba(47,109,246,.92), rgba(11,42,111,.88) 55%, rgba(127,180,255,.75));
+}
+
+.kl2-illustration{
+  width: 100%;
+  height: 100%;
+  padding: 6px;                 /* ✅ espacio interno */
+  border-radius: 18px;          /* borde externo redondeado */
+  background: rgba(255,255,255,.18);
+  border: 1px solid rgba(255,255,255,.22);
+  display: grid;
+  overflow: hidden;
+}
+
+/* Marco blanco interno (se ve como borde “blanco” real) */
+.kl2-illustration::before{
+  content:"";
+  position: absolute;
+  inset: 6px;                   /* ✅ coincide con padding */
+  border-radius: 14px;          /* 18 - 4 aprox, para que encaje */
+  border: 1px solid rgba(255,255,255,.65);
+  pointer-events: none;
+}
+
+/* Para que ::before funcione bien */
+.kl2-illustration{ position: relative; }
+
+/* Imagen: ocupa el área interna */
+.kl2-heroImg{
+  width: 100%;
+  height: 100%;
+  border-radius: 14px;
+  object-fit: cover;     /* ✅ llena todo el cuadro */
+  object-position: center;
+  display: block;
+  max-width: none;       /* ✅ evita que se haga chico */
+  max-height: none;
+  filter: drop-shadow(0 14px 28px rgba(0,0,0,.18));
+  opacity: .96;
+}
+
+/* “nubes” decorativas simples */
+.kl2-cloud{
+  position:absolute;
+  background: rgba(255,255,255,.20);
+  border: 1px solid rgba(255,255,255,.22);
+  border-radius: 999px;
+  filter: blur(.2px);
+}
+
+body.kl2::before{
+  content:"";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    radial-gradient(rgba(15,23,42,.06) 1px, transparent 1px);
+  background-size: 18px 18px;
+  opacity: .35;
+}

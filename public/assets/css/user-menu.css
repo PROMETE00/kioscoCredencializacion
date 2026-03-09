@@ -1,0 +1,87 @@
+/* ===== User menu (header) ===== */
+.d-userMenu{ position: relative; display:flex; justify-content:flex-end; }
+
+.d-userBtn{
+  display:flex;
+  align-items:center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: #f8fafc;
+  cursor: pointer;
+  transition: transform .08s ease, background .15s ease, border-color .15s ease;
+}
+.d-userBtn:hover{ background: #f3f6fb; border-color: rgba(47,109,246,.25); }
+.d-userBtn:active{ transform: translateY(1px); }
+
+.d-userBtn__text{ display:flex; flex-direction:column; gap: 2px; text-align:left; }
+.d-userBtn__hello{ font-size: 13px; color: var(--muted); }
+.d-userBtn__name{ font-weight: 900; color: #111827; }
+.d-userBtn__meta{ font-size: 12px; color: var(--muted); opacity:.9; }
+
+.d-userBtn__chev{
+  margin-left: 2px;
+  font-size: 14px;
+  color: var(--muted);
+  transition: transform .18s ease;
+}
+
+.d-userDropdown{
+  position: absolute;
+  right: 0;
+  top: calc(100% + 10px);
+  width: 260px;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  background: #ffffff;
+  box-shadow: var(--shadow);
+  padding: 12px;
+  opacity: 0;
+  transform: translateY(-6px) scale(.98);
+  pointer-events: none;
+  transition: opacity .16s ease, transform .16s ease;
+}
+
+.d-userMenu.is-open .d-userDropdown{
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  pointer-events: auto;
+}
+
+.d-userMenu.is-open .d-userBtn__chev{ transform: rotate(180deg); }
+
+.d-userDropdown__top{
+  border: 1px solid var(--border);
+  background: #fbfdff;
+  border-radius: 12px;
+  padding: 10px 12px;
+}
+.d-userDropdown__label{ font-size: 12px; color: var(--muted); font-weight: 900; }
+.d-userDropdown__value{ margin-top: 4px; font-size: 13px; font-weight: 900; color:#111827; }
+
+.d-userDropdown__actions{ margin-top: 10px; display:grid; gap: 8px; }
+
+.d-userItem{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  height: 40px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  text-decoration:none;
+  font-weight: 900;
+  font-size: 13px;
+  background: #f8fafc;
+  color: #374151;
+}
+.d-userItem:hover{ background:#f1f5f9; }
+
+.d-userItem--danger{
+  background: rgba(239,68,68,.10);
+  border-color: rgba(239,68,68,.25);
+  color: #991b1b;
+}
+.d-userItem--danger:hover{
+  background: rgba(239,68,68,.14);
+}

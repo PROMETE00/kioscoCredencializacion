@@ -1,63 +1,78 @@
 <?= $this->extend('layouts/discere') ?>
-<?php $this->setVar('activeMenu', 'dashboard'); ?>
+
+
+<?= $this->section('head') ?>
+  <link rel="stylesheet" href="<?= base_url('assets/css/admin-user-create.css') ?>">
+<?= $this->endSection() ?>
 
 <?= $this->section('content') ?>
 
-<section class="d-card">
-  <div class="d-card__header">
-    <div class="d-card__title">Crear usuario</div>
-    <a class="d-btn" href="<?= site_url('admin/usuarios') ?>">Volver</a>
+<section class="d-card au-create">
+
+  <div class="au-create__head">
+    <div>
+      <div class="au-create__title">Crear usuario</div>
+    </div>
+
+    <div class="au-create__headActions">
+      <a class="d-btn au-btn--ghost" href="<?= site_url('admin/usuarios') ?>">Volver</a>
+    </div>
   </div>
 
   <?php if (session()->getFlashdata('error')): ?>
-    <div class="d-status" style="border-style:solid; border-color: rgba(239,68,68,.25); background: rgba(239,68,68,.08);">
+    <div class="au-alert au-alert--error">
       <?= esc(session()->getFlashdata('error')) ?>
     </div>
   <?php endif; ?>
 
-  <form method="post" action="<?= site_url('admin/usuarios') ?>" style="margin-top:12px;">
+  <form method="post" action="<?= site_url('admin/usuarios') ?>" class="au-form">
     <?= csrf_field() ?>
 
-    <div class="d-meta__row">
-      <span class="d-meta__label">Usuario</span>
-      <input name="usuario" value="<?= esc(old('usuario')) ?>" style="width:60%; padding:10px; border:1px solid var(--border); border-radius:10px;">
+    <div class="au-grid">
+
+      <label class="au-field">
+        <span class="au-label">Usuario</span>
+        <input class="au-input" name="usuario" value="<?= esc(old('usuario')) ?>" autocomplete="username" placeholder="Ej. firma, foto, admin...">
+      </label>
+
+      <label class="au-field">
+        <span class="au-label">Nombre</span>
+        <input class="au-input" name="nombre" value="<?= esc(old('nombre')) ?>" placeholder="Nombre completo o estación">
+      </label>
+
+      <label class="au-field">
+        <span class="au-label">Email (opcional)</span>
+        <input class="au-input" name="email" value="<?= esc(old('email')) ?>" autocomplete="email" placeholder="correo@dominio.com">
+      </label>
+
+      <label class="au-field">
+        <span class="au-label">Rol</span>
+        <select class="au-input" name="rol_id">
+          <option value="">Selecciona…</option>
+          <?php foreach (($roles ?? []) as $r): ?>
+            <option value="<?= esc($r['id']) ?>"><?= esc($r['nombre'].' ('.$r['codigo'].')') ?></option>
+          <?php endforeach; ?>
+        </select>
+      </label>
+
+      <label class="au-field">
+        <span class="au-label">Contraseña</span>
+        <input class="au-input" type="password" name="password" autocomplete="new-password" placeholder="Mínimo 6 caracteres">
+      </label>
+
+      <label class="au-field">
+        <span class="au-label">Confirmar contraseña</span>
+        <input class="au-input" type="password" name="password2" autocomplete="new-password" placeholder="Repite la contraseña">
+      </label>
+
     </div>
 
-    <div class="d-meta__row" style="margin-top:10px;">
-      <span class="d-meta__label">Nombre</span>
-      <input name="nombre" value="<?= esc(old('nombre')) ?>" style="width:60%; padding:10px; border:1px solid var(--border); border-radius:10px;">
-    </div>
-
-    <div class="d-meta__row" style="margin-top:10px;">
-      <span class="d-meta__label">Email</span>
-      <input name="email" value="<?= esc(old('email')) ?>" style="width:60%; padding:10px; border:1px solid var(--border); border-radius:10px;">
-    </div>
-
-    <div class="d-meta__row" style="margin-top:10px;">
-      <span class="d-meta__label">Rol</span>
-      <select name="rol_id" style="width:60%; padding:10px; border:1px solid var(--border); border-radius:10px;">
-        <option value="">Selecciona…</option>
-        <?php foreach (($roles ?? []) as $r): ?>
-          <option value="<?= esc($r['id']) ?>"><?= esc($r['nombre'].' ('.$r['codigo'].')') ?></option>
-        <?php endforeach; ?>
-      </select>
-    </div>
-
-    <div class="d-meta__row" style="margin-top:10px;">
-      <span class="d-meta__label">Contraseña</span>
-      <input type="password" name="password" style="width:60%; padding:10px; border:1px solid var(--border); border-radius:10px;">
-    </div>
-
-    <div class="d-meta__row" style="margin-top:10px;">
-      <span class="d-meta__label">Confirmar</span>
-      <input type="password" name="password2" style="width:60%; padding:10px; border:1px solid var(--border); border-radius:10px;">
-    </div>
-
-    <div style="margin-top:14px; display:flex; gap:10px;">
-      <button class="d-btn d-btn--primary" type="submit">Crear</button>
-      <a class="d-btn" href="<?= site_url('admin/usuarios') ?>">Cancelar</a>
+    <div class="au-actions au-actions--split">
+      <a class="d-btn au-btn--ghost" href="<?= site_url('admin/usuarios') ?>">Cancelar</a>
+      <button class="d-btn d-btn--primary au-btn--primary" type="submit">Crear usuario</button>
     </div>
   </form>
+
 </section>
 
 <?= $this->endSection() ?>

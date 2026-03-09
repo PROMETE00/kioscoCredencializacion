@@ -1,0 +1,33 @@
+/* Fondo full-screen */
+.floating-lines-bg{
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 0;
+  overflow: hidden;
+}
+
+/* El canvas que inyecta Three */
+.floating-lines-bg canvas{
+  position: absolute;
+  inset: 0;
+  width: 100% !important;
+  height: 100% !important;
+  display: block;
+}
+
+/* La tarjeta siempre arriba del fondo */
+.kl2-wrap{
+  position: relative;
+  z-index: 2;
+}
+
+/* Velo opcional para que no distraiga el shader */
+body.kl2::before{
+  content:"";
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events:none;
+}

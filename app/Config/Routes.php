@@ -6,16 +6,32 @@ use CodeIgniter\Router\RouteCollection;
  * @var RouteCollection $routes
  */
 
-// =======================
-// Público: Login
-// =======================
-$routes->get('/', 'AuthController::login');
+/* =======================
+   PÚBLICO (ALUMNOS)
+   ======================= */
+$routes->get('/', 'Publico\TurnoPublicController::nuevo');
+
+$routes->group('', ['namespace' => 'App\Controllers\Publico'], static function($routes){
+    $routes->get('turno', 'TurnoPublicController::nuevo');
+    $routes->post('turno', 'TurnoPublicController::crear');
+    $routes->get('t/(:segment)', 'TurnoPublicController::estado/$1');
+});
+
+/* =======================
+   ADMIN: LOGIN / LOGOUT
+   ======================= */
+//  agrega un GET para mostrar el formulario de login admin
+$routes->get('admin/login', 'AuthController::login');     // <-- crea este método si no existe
+$routes->post('admin/login', 'AuthController::attempt');
+$routes->get('admin/logout', 'AuthController::logout');
+
+// (opcional) compatibilidad con tu POST viejo
 $routes->post('login', 'AuthController::attempt');
 $routes->get('logout', 'AuthController::logout');
 
-// =======================
-// Protegido: TODO el sistema
-// =======================
+/* =======================
+   PROTEGIDO: TODO el sistema
+   ======================= */
 $routes->group('', ['filter' => 'auth'], function($routes) {
 
     // Dashboard
@@ -44,6 +60,5 @@ $routes->group('', ['filter' => 'auth'], function($routes) {
     $routes->get('captura/huella/alumno', 'HuellaController::alumno');
     $routes->post('captura/huella/guardar', 'HuellaController::guardar');
 
-    // Debug (si lo quieres temporalmente)
     $routes->get('debug/db', 'DebugController::db');
 });

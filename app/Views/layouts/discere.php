@@ -7,6 +7,8 @@
 
   <link rel="stylesheet" href="<?= base_url('assets/css/discere-theme.css') ?>">
   <?= $this->renderSection('head') ?>
+  <link rel="stylesheet" href="<?= base_url('assets/css/user-menu.css') ?>">
+  <link rel="stylesheet" href="<?= base_url('assets/css/user-dropdown.css') ?>">
 </head>
 
 <body class="<?= trim($this->renderSection('bodyClass')) ?>">
@@ -21,16 +23,56 @@
         <div class="d-title">DISCERE :: Tecnológico Nacional de México</div>
       </div>
     </div>
+<?php $auth = session()->get('auth') ?? []; ?>
+<?php
+  $userName  = $auth['nombre'] ?? ($auth['usuario'] ?? 'Usuario');
+  $rolCodigo = $auth['rol_codigo'] ?? null;   // si aún no lo guardas, abajo te doy fallback
+  $isAdmin   = ($rolCodigo === 'ADMIN') || (($auth['rol_id'] ?? 0) == 1); // fallback temporal
+?>
 
-    <div class="d-header__right">
-      <div class="d-user">
-        <img class="d-avatar" src="<?= base_url('assets/img/user.png') ?>" alt="Usuario"
-             onerror="this.style.display='none'">
-        <div class="d-user__text">
-          <div class="d-user__hello">Hola, <a href="#" class="d-link"><?= esc($userName ?? 'Usuario') ?></a></div>
-        </div>
-      </div>
+<div class="d-header__right">
+  <div class="u-menu" id="uMenu">
+    <button class="u-trigger" type="button" aria-haspopup="menu" aria-expanded="false">
+      <span class="u-hello">Hola, <strong><?= esc($userName) ?></strong></span>
+      <span class="u-avatar" aria-hidden="true"></span>
+    </button>
+
+    <div class="u-dd" role="menu" aria-label="Menú de usuario">
+      <a class="u-item" role="menuitem" href="<?= site_url('perfil') ?>">
+        <span class="u-ico" aria-hidden="true">
+          <img class="u-ico-img" src="<?= base_url('assets/img/userSVG.svg') ?>" alt="">
+        </span>
+        Perfil
+      </a>
+
+      <a class="u-item" role="menuitem" href="<?= site_url('config') ?>">
+        <span class="u-ico" aria-hidden="true">
+          <img class="u-ico-img" src="<?= base_url('assets/img/settingsSVG.svg') ?>" alt="">
+        </span>
+        Configuración
+      </a>
+
+      <?php if ($isAdmin): ?>
+        <div class="u-sep" aria-hidden="true"></div>
+        <a class="u-item" role="menuitem" href="<?= site_url('admin/usuarios') ?>">
+          <span class="u-ico" aria-hidden="true">
+            <img class="u-ico-img" src="<?= base_url('assets/img/createUserSVG.svg') ?>" alt="">
+          </span>
+          Usuarios
+        </a>
+      <?php endif; ?>
+
+      <div class="u-sep" aria-hidden="true"></div>
+
+     <a class="u-item u-item--danger" role="menuitem" href="<?= site_url('logout') ?>">
+      <span class="u-ico" aria-hidden="true">
+        <img class="u-ico-img" src="<?= base_url('assets/img/LogOutSVG.svg') ?>" alt="">
+      </span>
+        Cerrar sesión
+      </a>
     </div>
+  </div>
+</div>
   </div>
 </header>
 <nav class="d-nav">
@@ -106,5 +148,27 @@
   </footer>
 
   <?= $this->renderSection('scripts') ?>
+
+<script>
+(function(){
+  const menu = document.getElementById('uMenu');
+  if(!menu) return;
+
+  const btn = menu.querySelector('.u-trigger');
+
+  function close(){
+    menu.classList.remove('is-open');
+    btn?.setAttribute('aria-expanded','false');
+  }
+  function toggle(){
+    const open = menu.classList.toggle('is-open');
+    btn?.setAttribute('aria-expanded', open ? 'true' : 'false');
+  }
+
+  btn?.addEventListener('click', (e)=>{ e.stopPropagation(); toggle(); });
+  document.addEventListener('click', close);
+  document.addEventListener('keydown', (e)=>{ if(e.key === 'Escape') close(); });
+})();
+</script>
 </body>
 </html>

@@ -5,87 +5,79 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title><?= esc($title ?? 'Acceso Kiosco') ?></title>
 
-  <link rel="stylesheet" href="<?= base_url('assets/css/kiosco-login.css') ?>">
+  <link rel="stylesheet" href="<?= base_url('assets/css/kiosco-login-v2.css') ?>">
+  <link rel="stylesheet" href="<?= base_url('assets/css/floating-lines.css') ?>">
+  <script type="module" src="<?= base_url('assets/js/floating-lines.js') ?>"></script>
 </head>
-<body class="k-login">
 
-  <main class="k-login__wrap">
+<body class="kl2">
 
-    <section class="k-hero" aria-label="Información del sistema">
-      <div class="k-hero__brand">
-        <img class="k-hero__logo" src="<?= base_url('assets/img/Instituto_Tecnologico_de_Oaxaca.png') ?>"
-             alt="TecNM" onerror="this.style.display='none'">
-        <div class="k-hero__titles">
-          <div class="k-hero__title">Kiosco de Credencialización</div>
-          <div class="k-hero__subtitle">TecNM · DISCERE</div>
-        </div>
+  <!-- Fondo (solo canvas, NO contenido dentro) -->
+  <div id="floatingLines" class="floating-lines-bg" aria-hidden="true"></div>
+
+  <!-- Contenido centrado -->
+  <main class="kl2-wrap">
+
+    <!-- IZQUIERDA -->
+    <section class="kl2-left" aria-label="Inicio de sesión">
+      <div class="kl2-brand">
+        <span class="kl2-dot" aria-hidden="true"></span>
+        <span class="kl2-brand__name">Kiosco credencialización</span>
       </div>
 
-      <p class="k-hero__desc">
-        Acceso para estaciones: <strong>Foto</strong>, <strong>Firma</strong>, <strong>Huella</strong> e <strong>Impresión</strong>.
-        Inicia sesión para continuar.
-      </p>
-
-      <div class="k-pill" role="note">
-        <span class="k-dot" aria-hidden="true"></span>
-        Acceso restringido · Personal autorizado
-      </div>
-
-      <div class="k-hero__meta">
-        <div class="k-meta">
-          <div class="k-meta__k">Entorno</div>
-          <div class="k-meta__v">Producción / Local</div>
-        </div>
-        <div class="k-meta">
-          <div class="k-meta__k">Seguridad</div>
-          <div class="k-meta__v">Contraseñas cifradas</div>
-        </div>
-      </div>
-    </section>
-
-    <section class="k-card" aria-label="Formulario de inicio de sesión">
-      <header class="k-card__header">
-        <h1 class="k-card__title">Iniciar sesión</h1>
-        <p class="k-card__sub">Usa tu usuario de estación o administrador.</p>
-      </header>
+      <h1 class="kl2-h1">Bienvenido a credencializacion</h1>
+      <p class="kl2-sub">Acceso institucional para estaciones de credencialización.</p>
 
       <?php if (session()->getFlashdata('error')): ?>
-        <div class="k-alert k-alert--error" role="alert">
+        <div class="kl2-alert" role="alert">
           <?= esc(session()->getFlashdata('error')) ?>
         </div>
       <?php endif; ?>
 
-      <form class="k-form" method="post" action="<?= site_url('login') ?>">
+      <form class="kl2-form" method="post" action="<?= site_url('login') ?>">
         <?= csrf_field() ?>
 
-        <label class="k-field">
-          <span class="k-field__label">Usuario</span>
-          <input class="k-field__input"
-                 name="usuario"
-                 value="<?= esc(old('usuario')) ?>"
-                 autocomplete="username"
-                 placeholder="Ej. admin, foto, firma…">
+        <label class="kl2-field">
+          <span class="kl2-label">Usuario</span>
+          <input class="kl2-input" name="usuario" value="<?= esc(old('usuario')) ?>"
+                 autocomplete="username" placeholder="Ej. admin, foto, firma…">
         </label>
 
-        <label class="k-field">
-          <span class="k-field__label">Contraseña</span>
-          <input class="k-field__input"
-                 type="password"
-                 name="password"
-                 autocomplete="current-password"
-                 placeholder="••••••••">
+        <label class="kl2-field">
+          <span class="kl2-label">Contraseña</span>
+          <input class="kl2-input" type="password" name="password"
+                 autocomplete="current-password" placeholder="••••••••">
         </label>
 
-        <button class="k-btn k-btn--primary" type="submit">
-          Entrar
-        </button>
+        <div class="kl2-row">
+          <label class="kl2-check">
+            <input type="checkbox" name="remember" value="1">
+            <span>Recordarme</span>
+          </label>
 
-        <footer class="k-card__foot">
-          <span>© <?= date('Y') ?> Kiosco</span>
-          <span class="k-sep">·</span>
-          <span>Soporte: Área de Sistemas</span>
-        </footer>
+          <a class="kl2-link" href="#" aria-disabled="true">¿Olvidaste tu contraseña?</a>
+        </div>
+
+        <button class="kl2-btn" type="submit">Iniciar sesión</button>
+
+        <div class="kl2-foot">
+          © <?= date('Y') ?> TecNM · DISCERE · Kiosco
+        </div>
       </form>
+    </section>
+
+    <!-- DERECHA -->
+    <section class="kl2-right" aria-label="Panel visual">
+      <div class="kl2-illustration">
+        <img class="kl2-heroImg"
+             src="<?= base_url('assets/img/login.svg') ?>"
+             alt="Instituto Tecnológico de Oaxaca"
+             onerror="this.style.display='none'">
+      </div>
+
+      <div class="kl2-cloud c1" aria-hidden="true"></div>
+      <div class="kl2-cloud c2" aria-hidden="true"></div>
+      <div class="kl2-cloud c3" aria-hidden="true"></div>
     </section>
 
   </main>
