@@ -6,7 +6,7 @@
   <title>Credencialización | Generar turno</title>
   <link rel="stylesheet" href="<?= base_url('assets/css/public-turno.css') ?>">
 </head>
-<body>
+<body class="">
 
 <?php
   $consultaRealizada = $consultaRealizada ?? false;
@@ -19,18 +19,19 @@
 <header class="pt-header">
   <div class="pt-header__inner">
     <div class="pt-header__left">
-      <img
-        class="pt-logo"
-        src="<?= base_url('assets/img/logo-ito.png') ?>"
-        alt="Instituto Tecnológico de Oaxaca"
-      >
-
+      <img class="d-logo" src="<?= base_url('assets/img/Instituto_Tecnologico_de_Oaxaca.png') ?>" alt="Logo"
+          onerror="this.style.display='none'">
       <div class="pt-brand">
         <h1 class="pt-brand__title">Instituto Tecnológico de Oaxaca</h1>
         <div class="pt-brand__subtitle">
           Sistema de turnos para credencialización
         </div>
       </div>
+    </div>
+    <div class="pt-header__right">
+      <a href="<?= base_url('admin/login') ?>" class="pt-btn pt-btn--secondary">
+        Administración
+      </a>
     </div>
   </div>
 </header>
@@ -200,17 +201,6 @@
               <li>Consulta tu turno cuando seas llamado al módulo.</li>
             </ul>
           </div>
-
-          <div class="pt-info-card pt-info-card--soft">
-            <div class="pt-info-card__title">Acceso administrativo</div>
-            <p class="pt-info-card__text">
-              Si perteneces al personal autorizado, puedes ingresar al panel de administración.
-            </p>
-
-            <a href="<?= base_url('admin/login') ?>" class="pt-btn pt-btn--secondary">
-              Administración
-            </a>
-          </div>
         </aside>
 
       </div>
@@ -218,10 +208,10 @@
   </div>
 </main>
 
-<footer class="pt-footer">
-  <span>Instituto Tecnológico de Oaxaca</span>
-  <span>Proceso de credencialización</span>
-</footer>
+  <footer class="d-footer">
+    <span>Derechos Reservados © <?= date('Y') ?> Instituto Tecnológico de Oaxaca</span>
+    <span>Desarrollado con <img class="d-ico-img" src="<?= base_url('assets/img/heartSVG.svg') ?>" alt=""></span>
+  </footer>
 
 </body>
 </html>

@@ -143,7 +143,7 @@
   </main>
 
   <footer class="d-footer">
-    <span>Derechos Reservados © <?= date('Y') ?> DISCERE.</span>
+    <span>Derechos Reservados © <?= date('Y') ?> Instituto Tecnológico de Oaxaca</span>
     <span>Desarrollado con <img class="d-ico-img" src="<?= base_url('assets/img/heartSVG.svg') ?>" alt=""></span>
   </footer>
 

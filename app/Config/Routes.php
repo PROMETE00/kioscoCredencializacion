@@ -19,7 +19,7 @@ $routes->get('t/(:segment)', 'Publico\TurnoPublicController::estado/$1');
    ADMIN: LOGIN / LOGOUT
    ======================= */
 //  agrega un GET para mostrar el formulario de login admin
-$routes->get('admin/login', 'AuthController::login');     // <-- crea este método si no existe
+$routes->get('admin/login', 'AuthController::login');
 $routes->post('admin/login', 'AuthController::attempt');
 $routes->get('admin/logout', 'AuthController::logout');
 

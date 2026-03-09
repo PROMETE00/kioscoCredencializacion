@@ -55,6 +55,7 @@ body{
     radial-gradient(circle at top left, rgba(47,109,246,.08), transparent 28%),
     linear-gradient(180deg, var(--pt-bg) 0%, var(--pt-bg-soft) 100%);
   color: var(--pt-text);
+  min-height: 100dvh;
 }
 
 /* =========================
@@ -610,4 +611,32 @@ body{
   .pt-verified-banner{
     align-items: flex-start;
   }
+}
+
+.d-footer{
+  max-width: 1180px;
+  margin: 18px auto 28px;
+  padding: 0 18px;
+  color: #8a94a6;
+  font-size: 13px;
+  display:flex;
+  justify-content: space-between;
+}
+
+.d-footer span:last-child{
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.d-footer .d-ico-img{
+  width: 14px;
+  height: 14px;
+  display: inline-block;
+}
+
+
+.d-logo{
+  height: 44px;
+  width: auto;
 }
