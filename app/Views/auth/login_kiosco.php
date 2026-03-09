@@ -12,8 +12,8 @@
 
 <body class="kl2">
 
-  <!-- Fondo (solo canvas, NO contenido dentro) -->
-  <div id="floatingLines" class="floating-lines-bg" aria-hidden="true"></div>
+  <!-- Fondo floating lines
+  <div id="floatingLines" class="floating-lines-bg" aria-hidden="true"></div>-->
 
   <!-- Contenido centrado -->
   <main class="kl2-wrap">
