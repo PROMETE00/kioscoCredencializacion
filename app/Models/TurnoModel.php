@@ -24,6 +24,6 @@ class TurnoModel extends Model
     ];
 
     protected $useTimestamps = true;
-    protected $createdField  = 'creado_at';
+    protected $createdField  = 'created_at';
     protected $updatedField  = 'updated_at';
 }

@@ -11,8 +11,11 @@ use CodeIgniter\Router\RouteCollection;
    ======================= */
 $routes->get('/', 'Publico\TurnoPublicController::nuevo');
 $routes->get('turno', 'Publico\TurnoPublicController::nuevo');
+$routes->get('turnos/general', 'Publico\TurnoPublicController::general');
 $routes->post('turno/buscar', 'Publico\TurnoPublicController::buscarAlumno');
 $routes->post('turno/generar', 'Publico\TurnoPublicController::generarTurno');
+$routes->get('turno/pdf/(:segment)', 'Publico\TurnoPublicController::descargarPdf/$1');
+$routes->get('turno/seguimiento/(:segment)', 'Publico\TurnoPublicController::estadoJson/$1');
 $routes->get('t/(:segment)', 'Publico\TurnoPublicController::estado/$1');
 
 /* =======================

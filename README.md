@@ -1,70 +1,149 @@
-# CodeIgniter 4 Application Starter
+# Kiosco Credencializacion
 
-## What is CodeIgniter?
+Aplicacion web en `CodeIgniter 4` para gestionar un flujo de credencializacion estudiantil con turnos y estaciones de captura.
 
-CodeIgniter is a PHP full-stack web framework that is light, fast, flexible and secure.
-More information can be found at the [official site](https://codeigniter.com).
+## Objetivo del sistema
 
-This repository holds a composer-installable app starter.
-It has been built from the
-[development repository](https://github.com/codeigniter4/CodeIgniter4).
+El proyecto implementa un kiosco con tres capas funcionales:
 
-More information about the plans for version 4 can be found in [CodeIgniter 4](https://forum.codeigniter.com/forumdisplay.php?fid=28) on the forums.
+- Area publica para que el alumno busque su registro y genere un turno.
+- Estaciones internas para captura de fotografia, firma y huella.
+- Panel administrativo para dashboard y gestion de usuarios.
 
-You can read the [user guide](https://codeigniter.com/user_guide/)
-corresponding to the latest version of the framework.
+## Stack tecnico
 
-## Installation & updates
+- PHP `^8.2`
+- CodeIgniter `^4.7`
+- PHPUnit `^10.5`
 
-`composer create-project codeigniter4/appstarter` then `composer update` whenever
-there is a new release of the framework.
+## Modulos principales
 
-When updating, check the release notes to see if there are any changes you might need to apply
-to your `app` folder. The affected files can be copied or merged from
-`vendor/codeigniter4/framework/app`.
+### 1. Turnos publicos
 
-## Setup
+Rutas principales en `app/Config/Routes.php`:
 
-Copy `env` to `.env` and tailor for your app, specifically the baseURL
-and any database settings.
+- `GET /` y `GET /turno`
+- `POST /turno/buscar`
+- `POST /turno/generar`
+- `GET /t/{token}`
 
-## Important Change with index.php
+Punto de entrada: `app/Controllers/Publico/TurnoPublicController.php`
 
-`index.php` is no longer in the root of the project! It has been moved inside the *public* folder,
-for better security and separation of components.
+Responsabilidad:
 
-This means that you should configure your web server to "point" to your project's *public* folder, and
-not to the project root. A better practice would be to configure a virtual host to point there. A poor practice would be to point your web server to the project root and expect to enter *public/...*, as the rest of your logic and the
-framework are exposed.
+- Buscar alumno por `numero_control` o `numero_ficha`.
+- Generar un turno activo con token QR.
+- Consultar el estado del turno mediante un enlace publico.
 
-**Please** read the user guide for a better explanation of how CI4 works!
+### 2. Autenticacion y acceso interno
 
-## Repository Management
+Archivos clave:
 
-We use GitHub issues, in our main repository, to track **BUGS** and to track approved **DEVELOPMENT** work packages.
-We use our [forum](http://forum.codeigniter.com) to provide SUPPORT and to discuss
-FEATURE REQUESTS.
+- `app/Controllers/AuthController.php`
+- `app/Filters/AuthFilter.php`
+- `app/Views/auth/login_kiosco.php`
 
-This repository is a "distribution" one, built by our release preparation script.
-Problems with it can be raised on our forum, or as issues in the main repository.
+Responsabilidad:
 
-## Server Requirements
+- Iniciar y cerrar sesion.
+- Restringir acceso al panel administrativo y estaciones de captura.
 
-PHP version 8.2 or higher is required, with the following extensions installed:
+### 3. Estacion de fotografia
 
-- [intl](http://php.net/manual/en/intl.requirements.php)
-- [mbstring](http://php.net/manual/en/mbstring.installation.php)
+Archivos clave:
 
-> [!WARNING]
-> - The end of life date for PHP 7.4 was November 28, 2022.
-> - The end of life date for PHP 8.0 was November 26, 2023.
-> - The end of life date for PHP 8.1 was December 31, 2025.
-> - If you are still using below PHP 8.2, you should upgrade immediately.
-> - The end of life date for PHP 8.2 will be December 31, 2026.
+- `app/Controllers/CameraController.php`
+- `app/Models/CaptureQueueModel.php`
+- `app/Views/camera/capture_queue.php`
 
-Additionally, make sure that the following extensions are enabled in your PHP:
+Responsabilidad:
 
-- json (enabled by default - don't turn it off)
-- [mysqlnd](http://php.net/manual/en/mysqlnd.install.php) if you plan to use MySQL
-- [libcurl](http://php.net/manual/en/curl.requirements.php) if you plan to use the HTTP\CURLRequest library
-# kioscoCredencializacion
+- Mostrar la cola de captura.
+- Guardar imagenes en `public/uploads/photos/`.
+- Avanzar el flujo del turno tras la captura.
+
+### 4. Estaciones de firma y huella
+
+Archivos clave:
+
+- `app/Controllers/FirmaController.php`
+- `app/Controllers/HuellaController.php`
+- `app/Models/FirmaModel.php`
+- `app/Models/HuellaModel.php`
+
+Estado actual:
+
+- Los controladores ya exponen el flujo esperado.
+- Los modelos siguen con metodos placeholder y requieren implementacion real.
+
+### 5. Administracion
+
+Archivos clave:
+
+- `app/Controllers/DashboardController.php`
+- `app/Controllers/AdminUsersController.php`
+- `app/Models/DashboardModel.php`
+- `app/Models/UserModel.php`
+
+Responsabilidad:
+
+- Dashboard de trabajo y KPIs.
+- Alta y consulta de usuarios internos.
+
+## Estructura relevante del repositorio
+
+```text
+app/
+  Config/          Configuracion de framework y rutas
+  Controllers/     Entradas HTTP del sistema
+  Filters/         Control de acceso
+  Models/          Acceso a datos y logica de flujo
+  Views/           Vistas por modulo
+  Database/Seeds/  Datos base de autenticacion
+public/
+  index.php        Punto de entrada web
+tests/             Pruebas base de CodeIgniter
+```
+
+## Riesgos tecnicos detectados
+
+- `README.md` estaba desalineado con el sistema real.
+- `app/Views/captura/` y `app/Views/capture/` mezclan nombres en espanol e ingles.
+- `app/Database/Migrations/` no contiene migraciones reales del dominio.
+- `app/Models/DashboardModel.php` depende de `vw_dashboard_worklist` sin documentacion del esquema.
+- `app/Models/FirmaModel.php` y `app/Models/HuellaModel.php` siguen como placeholders.
+
+## Setup rapido
+
+1. Ajusta `.env` con `baseURL` y conexion a base de datos.
+2. Instala dependencias con:
+
+```bash
+composer install
+```
+
+3. Levanta el servidor local de CodeIgniter:
+
+```bash
+php spark serve
+```
+
+4. Corre pruebas disponibles:
+
+```bash
+php vendor/bin/phpunit --testdox
+```
+
+## Seeds disponibles
+
+El proyecto incluye `app/Database/Seeds/AuthSeeder.php`, que prepara:
+
+- Roles base: `ADMIN`, `SUPERVISOR`, `EST_FOTO`, `EST_FIRMA`, `EST_HUELLA`, `EST_IMPRIME`
+- Usuarios iniciales para cada estacion
+
+## Proximos pasos recomendados
+
+- Crear migraciones reales para tablas, catalogos y vistas requeridas.
+- Normalizar nombres de carpetas y vistas de captura.
+- Implementar la logica real en `FirmaModel` y `HuellaModel`.
+- Agregar pruebas del flujo de turnos y estaciones.

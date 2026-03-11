@@ -3,54 +3,104 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Tu turno</title>
-
-  <style>
-    body{ background:#0b1220; color:#e8eefc; margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu; }
-    .wrap{ max-width:520px; margin:0 auto; padding:18px 14px 34px; }
-    .card{ background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.12); border-radius:16px; padding:16px; box-shadow: 0 10px 30px rgba(0,0,0,.25); }
-    .folio{ font-size:34px; font-weight:900; letter-spacing:1px; margin:6px 0 10px; }
-    .muted{ color:rgba(232,238,252,.72); font-size:13px; line-height:1.35; }
-    .qrbox{ display:flex; justify-content:center; margin:14px 0; }
-    .pill{ display:inline-block; padding:6px 10px; border-radius:999px; background:rgba(59,130,246,.18); border:1px solid rgba(59,130,246,.35); font-size:12px; }
-    a{ color:#93c5fd; word-break:break-all; }
-    .btn{ display:block; margin-top:12px; width:100%; text-align:center; padding:12px 14px; border-radius:12px; background:#3b82f6; color:#fff; text-decoration:none; font-weight:800; }
-  </style>
-
-  <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+  <title>Credencialización | Turno generado</title>
+  <link rel="stylesheet" href="<?= base_url('assets/css/public-turno.css') ?>">
 </head>
 <body>
-  <div class="wrap">
-    <div class="card">
-      <div class="pill">Turno generado</div>
-      <div class="folio"><?= esc($folio) ?></div>
+<?php $turno = $turno ?? []; ?>
 
-      <div class="muted">
-        <b><?= esc($nombre) ?></b><br>
-        Expira: <?= esc($expira) ?>
-      </div>
-
-      <div class="qrbox">
-        <div id="qr"></div>
-      </div>
-
-      <div class="muted">
-        Enlace de seguimiento:<br>
-        <a href="<?= esc($url) ?>"><?= esc($url) ?></a>
-      </div>
-
-      <a class="btn" href="<?= esc($url) ?>">Ver estado del turno</a>
-      <a class="btn" style="background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.14);" href="<?= base_url('turno') ?>">Generar otro</a>
+<header class="pt-header">
+  <div class="pt-header__inner">
+    <div class="pt-header__left">
+      <a href="<?= base_url('turno') ?>" aria-label="Ir al inicio público">
+        <img class="d-logo" src="<?= base_url('assets/img/Instituto_Tecnologico_de_Oaxaca.png') ?>" alt="Logo" onerror="this.style.display='none'">
+      </a>
+      <a href="<?= base_url('turno') ?>" class="pt-brand pt-brand--link" aria-label="Ir al inicio público">
+        <h1 class="pt-brand__title">Instituto Tecnológico de Oaxaca</h1>
+        <div class="pt-brand__subtitle">Sistema de turnos para credencialización</div>
+      </a>
     </div>
   </div>
+</header>
 
-  <script>
-    new QRCode(document.getElementById("qr"), {
-      text: <?= json_encode($url) ?>,
-      width: 220,
-      height: 220,
-      correctLevel: QRCode.CorrectLevel.M
-    });
-  </script>
+<main class="pt-main">
+  <div class="pt-container">
+    <section class="pt-shell">
+      <div class="pt-grid">
+        <div class="pt-panel pt-panel--main">
+          <div class="pt-kicker">Turno confirmado</div>
+          <h2 class="pt-title">Tu turno fue generado correctamente</h2>
+          <p class="pt-text">
+            Guarda el folio, el PDF y el código QR. Con cualquiera de ellos podrás dar seguimiento al avance de tu trámite.
+          </p>
+
+          <div class="pt-verified-banner">
+            <span class="pt-checkmark">✓</span>
+            <span>Se generó un turno activo para <?= esc($turno['nombre_completo'] ?? 'Alumno') ?>.</span>
+          </div>
+
+          <div class="pt-folio-panel">
+            <div class="pt-folio-panel__label">Folio de atención</div>
+            <div class="pt-folio-display"><?= esc($turno['folio'] ?? 'N/A') ?></div>
+            <div class="pt-folio-panel__subtext">Fecha de generación: <?= esc($turno['fecha_generacion_texto'] ?? 'N/A') ?></div>
+          </div>
+
+          <div class="pt-data-grid">
+            <div class="pt-info-card">
+              <div class="pt-info-card__title">Datos del alumno</div>
+              <div class="pt-info-list">
+                <div><span>Nombre</span><strong><?= esc($turno['nombre_completo'] ?? 'N/A') ?></strong></div>
+                <div><span>No. control / ficha</span><strong><?= esc($turno['identificador'] ?? 'N/A') ?></strong></div>
+                <div><span>Carrera</span><strong><?= esc($turno['carrera'] ?? 'N/A') ?></strong></div>
+                <div><span>Campus</span><strong><?= esc($turno['campus'] ?? 'N/A') ?></strong></div>
+              </div>
+            </div>
+
+            <div class="pt-info-card">
+              <div class="pt-info-card__title">Datos del turno</div>
+              <div class="pt-info-list">
+                <div><span>Estatus</span><strong><?= esc($turno['estatus'] ?? 'N/A') ?></strong></div>
+                <div><span>Etapa actual</span><strong><?= esc($turno['etapa'] ?? 'N/A') ?></strong></div>
+                <div><span>Expira</span><strong><?= esc($turno['fecha_expira_texto'] ?? 'N/A') ?></strong></div>
+                <div><span>Seguimiento</span><strong>Disponible en línea</strong></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="pt-btn-group">
+            <a href="<?= esc($turno['seguimiento_url'] ?? base_url('turno')) ?>" class="pt-btn pt-btn--success">
+              Ver seguimiento
+            </a>
+            <a href="<?= esc($turno['pdf_url'] ?? '#') ?>" class="pt-btn pt-btn--secondary">
+              Descargar PDF
+            </a>
+          </div>
+
+          <div class="pt-note">
+            Si no puedes abrir el QR, conserva este folio: <strong><?= esc($turno['folio'] ?? 'N/A') ?></strong>.
+          </div>
+        </div>
+
+        <aside class="pt-panel pt-panel--aside">
+          <h3 class="pt-side-title">Código QR de seguimiento</h3>
+          <div class="pt-qr-container">
+            <div class="pt-qr-box">
+              <img src="<?= esc($turno['qr_url'] ?? '') ?>" alt="Código QR de seguimiento" class="pt-qr-img">
+            </div>
+          </div>
+          <div class="pt-note pt-note--tight">
+            Escanéalo desde tu celular o entra directamente a:<br>
+            <a class="pt-link-break" href="<?= esc($turno['seguimiento_url'] ?? '#') ?>"><?= esc($turno['seguimiento_url'] ?? '') ?></a>
+          </div>
+        </aside>
+      </div>
+    </section>
+  </div>
+</main>
+
+<footer class="d-footer">
+  <span>Derechos Reservados © <?= date('Y') ?> Instituto Tecnológico de Oaxaca</span>
+  <span>Desarrollado con <img class="d-ico-img" src="<?= base_url('assets/img/heartSVG.svg') ?>" alt=""></span>
+</footer>
 </body>
 </html>

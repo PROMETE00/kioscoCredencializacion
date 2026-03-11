@@ -1,0 +1,36 @@
+.tg-card{
+background:#fff;
+padding:30px;
+border-radius:12px;
+box-shadow:0 4px 10px rgba(0,0,0,.1);
+margin-top:20px;
+text-align:center;
+}
+
+.tg-folio{
+font-size:26px;
+margin-top:10px;
+font-weight:600;
+}
+
+.tg-qr{
+margin-top:25px;
+}
+
+.tg-qr img{
+width:220px;
+height:220px;
+}
+
+.tg-info{
+margin-top:25px;
+text-align:left;
+max-width:400px;
+margin-left:auto;
+margin-right:auto;
+}
+
+.tg-row{
+margin-bottom:10px;
+font-size:15px;
+}

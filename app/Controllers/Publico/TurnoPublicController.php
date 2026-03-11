@@ -3,8 +3,11 @@
 namespace App\Controllers\Publico;
 
 use App\Controllers\BaseController;
+use App\Libraries\TurnoPdfGenerator;
 use App\Models\AlumnoModel;
 use App\Models\TurnoModel;
+use App\Services\TurnoSeguimientoService;
+use RuntimeException;
 
 class TurnoPublicController extends BaseController
 {
@@ -12,7 +15,19 @@ class TurnoPublicController extends BaseController
 
     public function nuevo()
     {
-        return view($this->viewBase . '/generar_turno', $this->baseViewData());
+        return view($this->viewBase . '/generar_turno', array_merge(
+            $this->baseViewData(),
+            [
+                'vistaGeneral' => $this->seguimientoService()->obtenerVistaGeneral(),
+            ]
+        ));
+    }
+
+    public function general()
+    {
+        return view($this->viewBase . '/turnos_general', [
+            'vistaGeneral' => $this->seguimientoService()->obtenerVistaGeneral(),
+        ]);
     }
 
     public function buscarAlumno()
@@ -44,6 +59,8 @@ class TurnoPublicController extends BaseController
                 ]
             ));
         }
+
+        $this->desactivarTurnosNoVigentes((int) $alumnoDb['id_alumno']);
 
         $turnoActual = $this->buscarTurnoActivoPorAlumno((int) $alumnoDb['id_alumno']);
 
@@ -91,6 +108,8 @@ class TurnoPublicController extends BaseController
             ));
         }
 
+        $this->desactivarTurnosNoVigentes((int) $alumnoDb['id_alumno']);
+
         $turnoExistente = $this->buscarTurnoActivoPorAlumno((int) $alumnoDb['id_alumno']);
 
         if ($turnoExistente) {
@@ -122,8 +141,6 @@ class TurnoPublicController extends BaseController
             ));
         }
 
-        $turnoModel = new TurnoModel();
-
         $token     = $this->makeToken();
         $tokenHash = hash('sha256', $token);
 
@@ -133,7 +150,7 @@ class TurnoPublicController extends BaseController
         $db = \Config\Database::connect();
         $db->transStart();
 
-        $turnoId = $turnoModel->insert([
+        $db->table('turnos')->insert([
             'folio'            => 'PEND',
             'alumno_id'        => (int) $alumnoDb['id_alumno'],
             'estatus_turno_id' => (int) $catalogos['estatus_id'],
@@ -144,14 +161,33 @@ class TurnoPublicController extends BaseController
             'llamado_at'       => null,
             'created_at'       => $ahora,
             'updated_at'       => $ahora,
-        ], true);
-
-        $folio = 'A-' . str_pad((string) $turnoId, 6, '0', STR_PAD_LEFT);
-
-        $turnoModel->update($turnoId, [
-            'folio'      => $folio,
-            'updated_at' => $ahora,
         ]);
+
+        $turnoId = (int) $db->insertID();
+
+        if ($turnoId <= 0) {
+            $db->transRollback();
+
+            return view($this->viewBase . '/generar_turno', array_merge(
+                $this->baseViewData(),
+                [
+                    'consultaRealizada' => true,
+                    'alumnoEncontrado'  => true,
+                    'identificador'     => $identificador,
+                    'alumno'            => $this->mapearAlumnoParaVista($alumnoDb, $identificador),
+                    'error'             => 'No se pudo crear el registro del turno. Intenta de nuevo.',
+                ]
+            ));
+        }
+
+        $folio = $this->buildFolio((int) $turnoId);
+
+        $db->table('turnos')
+            ->where('id_turno', $turnoId)
+            ->update([
+                'folio'      => $folio,
+                'updated_at' => $ahora,
+            ]);
 
         $db->transComplete();
 
@@ -168,13 +204,27 @@ class TurnoPublicController extends BaseController
             ));
         }
 
-        $url = base_url('t/' . $token);
+        $turno = $this->seguimientoService()->obtenerPorId((int) $turnoId, $token);
+
+        if ($turno === null) {
+            $turno = [
+                'folio'                 => $folio,
+                'nombre_completo'       => $alumnoDb['nombre_completo'],
+                'identificador'         => $this->resolverIdentificadorAlumno($alumnoDb),
+                'carrera'               => $alumnoDb['carrera_nombre'] ?? ($alumnoDb['carrera_clave'] ?? 'N/A'),
+                'campus'                => 'Instituto Tecnológico de Oaxaca',
+                'estatus'               => 'Activo',
+                'etapa'                 => 'Turno generado',
+                'fecha_generacion_texto'=> date('d/m/Y H:i', strtotime($ahora)),
+                'fecha_expira_texto'    => date('d/m/Y H:i', strtotime($expira)),
+                'seguimiento_url'       => base_url('t/' . $token),
+                'pdf_url'               => base_url('turno/pdf/' . $token),
+                'qr_url'                => $this->seguimientoService()->construirQrUrl(base_url('t/' . $token)),
+            ];
+        }
 
         return view($this->viewBase . '/turno_qr', [
-            'folio'  => $folio,
-            'nombre' => $alumnoDb['nombre_completo'],
-            'url'    => $url,
-            'expira' => $expira,
+            'turno' => $turno,
         ]);
     }
 
@@ -186,29 +236,9 @@ class TurnoPublicController extends BaseController
             return redirect()->to(base_url('turno'));
         }
 
-        $hash = hash('sha256', $token);
+        $turno = $this->seguimientoService()->obtenerPorToken($token);
 
-        $db = \Config\Database::connect();
-
-        $row = $db->table('turnos t')
-            ->select('
-                t.id_turno,
-                t.folio,
-                t.es_activo,
-                t.fecha_expira,
-                t.llamado_at,
-                t.created_at,
-                e.nombre AS etapa,
-                s.nombre AS estatus
-            ')
-            ->join('cat_etapas e', 'e.id_etapa = t.etapa_actual_id', 'left')
-            ->join('cat_estatus_turno s', 's.id_estatus = t.estatus_turno_id', 'left')
-            ->where('t.qr_token_hash', $hash)
-            ->orderBy('t.id_turno', 'DESC')
-            ->get()
-            ->getRowArray();
-
-        if (!$row) {
+        if ($turno === null) {
             return view($this->viewBase . '/turno_estado', [
                 'notFound' => true,
             ]);
@@ -216,8 +246,68 @@ class TurnoPublicController extends BaseController
 
         return view($this->viewBase . '/turno_estado', [
             'notFound' => false,
-            'turno'    => $row,
+            'turno'    => $turno,
         ]);
+    }
+
+    public function estadoJson(string $token)
+    {
+        $token = trim($token);
+
+        if ($token === '') {
+            return $this->response
+                ->setStatusCode(400)
+                ->setJSON([
+                    'ok'      => false,
+                    'message' => 'Token de seguimiento inválido.',
+                ]);
+        }
+
+        $turno = $this->seguimientoService()->obtenerPorToken($token);
+
+        if ($turno === null) {
+            return $this->response
+                ->setStatusCode(404)
+                ->setJSON([
+                    'ok'      => false,
+                    'message' => 'Turno no encontrado.',
+                ]);
+        }
+
+        return $this->response->setJSON([
+            'ok'    => true,
+            'turno' => $turno,
+        ]);
+    }
+
+    public function descargarPdf(string $token)
+    {
+        $token = trim($token);
+
+        if ($token === '') {
+            return redirect()->to(base_url('turno'));
+        }
+
+        $turno = $this->seguimientoService()->obtenerPorToken($token);
+
+        if ($turno === null) {
+            return $this->response
+                ->setStatusCode(404)
+                ->setBody('No se encontró el turno solicitado.');
+        }
+
+        try {
+            $pdf = (new TurnoPdfGenerator())->generar($turno);
+        } catch (RuntimeException $e) {
+            return $this->response
+                ->setStatusCode(500)
+                ->setBody($e->getMessage());
+        }
+
+        return $this->response
+            ->setHeader('Content-Type', 'application/pdf')
+            ->setHeader('Content-Disposition', 'attachment; filename="' . $pdf['filename'] . '"')
+            ->setBody($pdf['contents']);
     }
 
     private function buscarAlumnoPorIdentificador(string $identificador): ?array
@@ -236,15 +326,30 @@ class TurnoPublicController extends BaseController
 
     private function buscarTurnoActivoPorAlumno(int $alumnoId): ?array
     {
-        $turnoModel = new TurnoModel();
         $ahora = date('Y-m-d H:i:s');
+        $db = \Config\Database::connect();
 
-        $turno = $turnoModel
-            ->where('alumno_id', $alumnoId)
-            ->where('es_activo', 1)
-            ->where('fecha_expira >=', $ahora)
-            ->orderBy('id_turno', 'DESC')
-            ->first();
+        $turno = $db->table('turnos t')
+            ->select('
+                t.id_turno,
+                t.folio,
+                t.created_at,
+                t.fecha_expira,
+                e.nombre AS etapa,
+                s.nombre AS estatus
+            ')
+            ->join('cat_etapas e', 'e.id_etapa = t.etapa_actual_id', 'left')
+            ->join('cat_estatus_turno s', 's.id_estatus = t.estatus_turno_id', 'left')
+            ->where('t.alumno_id', $alumnoId)
+            ->where('t.es_activo', 1)
+            ->where('t.fecha_expira >=', $ahora)
+            ->groupStart()
+                ->where('s.codigo IS NULL', null, false)
+                ->orWhereNotIn('s.codigo', ['vencido', 'cancelado', 'finalizado', 'COMPLETADO', 'RECHAZADO'])
+            ->groupEnd()
+            ->orderBy('t.id_turno', 'DESC')
+            ->get()
+            ->getRowArray();
 
         return $turno ?: null;
     }
@@ -254,15 +359,33 @@ class TurnoPublicController extends BaseController
         $db = \Config\Database::connect();
 
         $etapa = $db->table('cat_etapas')
-            ->orderBy('orden', 'ASC')
-            ->orderBy('id_etapa', 'ASC')
+            ->where('codigo', 'turno_generado')
             ->get()
             ->getRowArray();
 
+        if (!$etapa) {
+            $etapa = $db->table('cat_etapas')
+                ->orderBy('orden', 'ASC')
+                ->orderBy('id_etapa', 'ASC')
+                ->get()
+                ->getRowArray();
+        }
+
         $estatus = $db->table('cat_estatus_turno')
-            ->orderBy('id_estatus', 'ASC')
+            ->where('codigo', 'activo')
             ->get()
             ->getRowArray();
+
+        if (!$estatus) {
+            $estatus = $db->table('cat_estatus_turno')
+                ->groupStart()
+                    ->where('codigo', 'activo')
+                    ->orWhere('codigo', 'EN_COLA')
+                ->groupEnd()
+                ->orderBy('id_estatus', 'ASC')
+                ->get()
+                ->getRowArray();
+        }
 
         if (!$etapa || !$estatus) {
             return null;
@@ -278,7 +401,7 @@ class TurnoPublicController extends BaseController
     {
         return [
             'id_alumno'      => (int) $alumnoDb['id_alumno'],
-            'identificador'  => $identificador,
+            'identificador'  => $this->resolverIdentificadorAlumno($alumnoDb) ?: $identificador,
             'numero_control' => $alumnoDb['numero_control'] ?? null,
             'numero_ficha'   => $alumnoDb['numero_ficha'] ?? null,
             'nombre'         => $alumnoDb['nombre_completo'] ?? 'N/A',
@@ -303,6 +426,7 @@ class TurnoPublicController extends BaseController
             'alumno'            => null,
             'turnoExistente'    => false,
             'turnoActual'       => null,
+            'vistaGeneral'      => null,
         ];
     }
 
@@ -310,5 +434,45 @@ class TurnoPublicController extends BaseController
     {
         $raw = random_bytes(24);
         return rtrim(strtr(base64_encode($raw), '+/', '-_'), '=');
+    }
+
+    private function buildFolio(int $turnoId): string
+    {
+        return 'FOL-' . str_pad((string) $turnoId, 8, '0', STR_PAD_LEFT);
+    }
+
+    private function resolverIdentificadorAlumno(array $alumnoDb): string
+    {
+        if (!empty($alumnoDb['numero_control'])) {
+            return (string) $alumnoDb['numero_control'];
+        }
+
+        return (string) ($alumnoDb['numero_ficha'] ?? '');
+    }
+
+    private function seguimientoService(): TurnoSeguimientoService
+    {
+        return new TurnoSeguimientoService();
+    }
+
+    private function desactivarTurnosNoVigentes(int $alumnoId): void
+    {
+        $ahora = date('Y-m-d H:i:s');
+        $db = \Config\Database::connect();
+
+        $db->query(
+            'UPDATE turnos t
+             LEFT JOIN cat_estatus_turno s ON s.id_estatus = t.estatus_turno_id
+             LEFT JOIN cat_etapas e ON e.id_etapa = t.etapa_actual_id
+             SET t.es_activo = NULL, t.updated_at = ?
+             WHERE t.alumno_id = ?
+               AND t.es_activo = 1
+               AND (
+                    t.fecha_expira < ?
+                    OR s.codigo IN ("vencido", "cancelado", "finalizado", "COMPLETADO", "RECHAZADO")
+                    OR e.es_terminal = 1
+               )',
+            [$ahora, $alumnoId, $ahora]
+        );
     }
 }

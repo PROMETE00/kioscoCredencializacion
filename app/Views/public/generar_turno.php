@@ -14,19 +14,22 @@
   $turnoExistente    = $turnoExistente ?? false;
   $alumno            = $alumno ?? null;
   $turnoActual       = $turnoActual ?? null;
+  $vistaGeneral      = $vistaGeneral ?? ['total_turnos' => 0, 'en_espera' => 0, 'turno_actual' => null];
 ?>
 
 <header class="pt-header">
   <div class="pt-header__inner">
     <div class="pt-header__left">
-      <img class="d-logo" src="<?= base_url('assets/img/Instituto_Tecnologico_de_Oaxaca.png') ?>" alt="Logo"
-          onerror="this.style.display='none'">
-      <div class="pt-brand">
+      <a href="<?= base_url('turno') ?>" aria-label="Ir al inicio público">
+        <img class="d-logo" src="<?= base_url('assets/img/Instituto_Tecnologico_de_Oaxaca.png') ?>" alt="Logo"
+            onerror="this.style.display='none'">
+      </a>
+      <a href="<?= base_url('turno') ?>" class="pt-brand pt-brand--link" aria-label="Ir al inicio público">
         <h1 class="pt-brand__title">Instituto Tecnológico de Oaxaca</h1>
         <div class="pt-brand__subtitle">
           Sistema de turnos para credencialización
         </div>
-      </div>
+      </a>
     </div>
     <div class="pt-header__right">
       <a href="<?= base_url('admin/login') ?>" class="pt-btn pt-btn--secondary">
@@ -200,6 +203,25 @@
               <li>Ten tu celular disponible para guardar el QR.</li>
               <li>Consulta tu turno cuando seas llamado al módulo.</li>
             </ul>
+          </div>
+            <div class="pt-info-card">
+            <div class="pt-callout__content">
+              <div class="pt-info-card__title">Consulta primero la pantalla general de turnos</div>
+              <div class="pt-callout__text">
+                <ul class="pt-list">
+                <li>Turnos vigentes: <strong><?= esc((string) ($vistaGeneral['total_turnos'] ?? 0)) ?></strong>.</li>
+                <li>En espera: <strong><?= esc((string) ($vistaGeneral['en_espera'] ?? 0)) ?></strong>.</li>
+                <?php if (!empty($vistaGeneral['turno_actual']['folio'])): ?>
+                <li>  En atención ahora: <strong><?= esc($vistaGeneral['turno_actual']['folio']) ?></strong>.</li>
+                <?php endif; ?>
+                </ul>
+              </div>
+            </div>
+            <div class="pt-callout__actions">
+              <a href="<?= base_url('turnos/general') ?>" class="pt-btn pt-btn--secondary">
+                Ver turnos
+              </a>
+            </div>
           </div>
         </aside>
 
