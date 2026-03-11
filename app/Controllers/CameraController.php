@@ -4,6 +4,7 @@ namespace App\Controllers;
 
 use CodeIgniter\Controller;
 use App\Models\CaptureQueueModel;
+use RuntimeException;
 
 class CameraController extends Controller
 {
@@ -39,10 +40,11 @@ class CameraController extends Controller
     {
         $dataUrl   = $this->request->getPost('image');
         $studentId = (int) $this->request->getPost('student_id');
+        $turnoId   = (int) $this->request->getPost('turno_id');
 
-        if (!$studentId) {
+        if (!$studentId || !$turnoId) {
             return $this->response->setStatusCode(400)->setJSON([
-                'ok' => false, 'msg' => 'Falta student_id'
+                'ok' => false, 'msg' => 'Falta student_id o turno_id'
             ]);
         }
 
@@ -52,11 +54,20 @@ class CameraController extends Controller
             ]);
         }
 
-        [$meta, $content] = explode(',', $dataUrl, 2);
+        if (!preg_match('#^data:(image/[a-zA-Z0-9.+-]+);base64,(.+)$#', $dataUrl, $matches)) {
+            return $this->response->setStatusCode(400)->setJSON([
+                'ok' => false, 'msg' => 'La imagen no tiene un formato compatible'
+            ]);
+        }
 
-        $ext = 'jpg';
-        if (str_contains($meta, 'image/png'))  $ext = 'png';
-        if (str_contains($meta, 'image/webp')) $ext = 'webp';
+        $mime = strtolower($matches[1]);
+        $content = $matches[2];
+
+        $ext = match ($mime) {
+            'image/png' => 'png',
+            'image/webp' => 'webp',
+            default => 'jpg',
+        };
 
         $binary = base64_decode($content, true);
         if ($binary === false) {
@@ -71,16 +82,35 @@ class CameraController extends Controller
         $filename = "foto_{$studentId}_" . date('Ymd_His') . '_' . bin2hex(random_bytes(3)) . '.' . $ext;
         $path = $dir . $filename;
 
-        file_put_contents($path, $binary);
+        if (file_put_contents($path, $binary) === false) {
+            return $this->response->setStatusCode(500)->setJSON([
+                'ok' => false, 'msg' => 'No se pudo guardar el archivo de la fotografia'
+            ]);
+        }
 
-        // actualiza BD: foto + estado siguiente
         $m = new CaptureQueueModel();
-        $m->markCaptured($studentId, 'uploads/photos/' . $filename);
+        try {
+            $m->markCaptured(
+                $studentId,
+                $turnoId,
+                'uploads/photos/' . $filename,
+                $mime,
+                filesize($path) ?: 0,
+                hash('sha256', $binary)
+            );
+        } catch (RuntimeException $e) {
+            @unlink($path);
+            return $this->response->setStatusCode(400)->setJSON([
+                'ok' => false, 'msg' => $e->getMessage()
+            ]);
+        }
 
         return $this->response->setJSON([
             'ok'       => true,
             'filename' => $filename,
             'url'      => base_url('uploads/photos/' . $filename),
+            'queue'    => $m->getQueue(),
+            'current'  => $m->getCurrent(),
         ]);
     }
 }

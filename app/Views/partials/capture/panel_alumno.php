@@ -28,5 +28,6 @@
     </div>
   </div>
 
-  <input type="hidden" id="studentId" value="<?= esc($current['id'] ?? '') ?>">
+  <input type="hidden" id="studentId" value="<?= esc($current['alumno_id'] ?? $current['id'] ?? '') ?>">
+  <input type="hidden" id="turnoId" value="<?= esc($current['turno_id'] ?? '') ?>">
 </aside>

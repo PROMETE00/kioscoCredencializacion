@@ -35,9 +35,12 @@ $routes->get('logout', 'AuthController::logout');
    ======================= */
 $routes->group('', ['filter' => 'auth'], function($routes) {
 
-    // Dashboard
+   // Dashboard
    $routes->get('admin', 'DashboardController::index');
    $routes->get('admin/dashboard', 'DashboardController::index');
+   $routes->get('admin/dashboard/alumnos', 'DashboardController::alumnos');
+   $routes->post('admin/dashboard/estatus', 'DashboardController::cambiarEstatus');
+   $routes->post('admin/dashboard/biometrico/eliminar', 'DashboardController::borrarBiometrico');
 
     // Usuarios (admin panel)
    $routes->get('admin/usuarios', 'AdminUsersController::index');
@@ -49,10 +52,11 @@ $routes->group('', ['filter' => 'auth'], function($routes) {
    $routes->post('captura/guardar', 'CameraController::save');
 
     // Firma
-   $routes->get('captura/firma', 'FirmaController::index');
-   $routes->get('captura/firma/(:num)', 'FirmaController::index/$1');
-   $routes->get('captura/firma/cola', 'FirmaController::cola');
-   $routes->post('captura/firma/guardar', 'FirmaController::guardar');
+    $routes->get('captura/firma', 'FirmaController::index');
+    $routes->get('captura/firma/(:num)', 'FirmaController::index/$1');
+    $routes->get('captura/firma/cola', 'FirmaController::cola');
+    $routes->get('captura/firma/alumno', 'FirmaController::alumno');
+    $routes->post('captura/firma/guardar', 'FirmaController::guardar');
 
     // Huella
    $routes->get('captura/huella', 'HuellaController::index');

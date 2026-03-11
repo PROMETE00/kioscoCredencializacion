@@ -6,80 +6,99 @@
 <?= $this->endSection() ?>
 
 <?= $this->section('content') ?>
+<div class="d-topbar d-topbar--grid">
+  <div class="d-card d-searchbar">
+    <div class="d-searchbar__form">
+      <input
+        id="dashboardSearch"
+        class="d-searchbar__input"
+        placeholder="Buscar por número de control, ficha, nombre, carrera o folio…"
+        autocomplete="off"
+      >
+    </div>
+    <div class="d-subhint">La tabla se actualiza automáticamente al escribir. Se cargan 8 alumnos por consulta para mantenerla ligera.</div>
+  </div>
 
-<div class="d-toolbar">
+  <div class="d-kpi-grid">
+    <div class="d-kpi is-active">
+      <div class="d-kpi__label">Alumnos</div>
+      <div class="d-kpi__value" id="kpiTotalAlumnos"><?= esc((string) ($kpis['total_alumnos'] ?? 0)) ?></div>
+      <div class="d-kpi__sub">Registros en base de datos</div>
+    </div>
+    <div class="d-kpi is-active">
+      <div class="d-kpi__label">Turnos activos</div>
+      <div class="d-kpi__value" id="kpiTurnosActivos"><?= esc((string) ($kpis['turnos_activos'] ?? 0)) ?></div>
+      <div class="d-kpi__sub">Con turno vigente</div>
+    </div>
+    <div class="d-kpi is-active">
+      <div class="d-kpi__label">Pendientes biométricos</div>
+      <div class="d-kpi__value" id="kpiPendientes"><?= esc((string) ($kpis['pendientes_biometricos'] ?? 0)) ?></div>
+      <div class="d-kpi__sub">Foto, firma o huella faltante</div>
+    </div>
+  </div>
 </div>
 
-<div class="d-topbar">
-<div class="d-card d-searchbar d-searchbar--center">
-  <form method="get" action="<?= site_url('admin/dashboard') ?>" class="d-searchbar__form">
-    <input
-      name="q"
-      value="<?= esc($q ?? '') ?>"
-      class="d-searchbar__input"
-      placeholder="Buscar por No. control, CURP, nombre o carrera…"
-      autocomplete="off"
-    >
-    <!-- Fijamos stage=hoy para que siempre sea atendidos -->
-    <input type="hidden" name="stage" value="hoy">
-  </form>
-</div>
-
-<a class="d-kpi d-kpi--side is-active" href="<?= site_url('admin/dashboard?stage=hoy&q='.urlencode($q ?? '')) ?>">
-    <div class="d-kpi__label">Atendidos hoy</div>
-    <div class="d-kpi__value"><?= esc((string)($kpis['atendidos_hoy'] ?? 0)) ?></div>
-    <div class="d-kpi__sub">Ver tabla</div>
-  </a>
-</div>
-
-<!-- TABLA (sin estaciones) -->
 <section class="d-main-grid d-main-grid--single">
-
   <div class="d-card d-worklist">
+    <div class="d-worklist__top">
+      <div>
+        <div class="d-card-title">Panel general administrativo</div>
+        <div class="d-subhint" id="dashboardMeta">Mostrando los primeros <?= esc((string) count($worklist)) ?> alumnos encontrados.</div>
+      </div>
+    </div>
+
     <div class="d-tablewrap">
       <table class="d-table">
         <thead>
           <tr>
-            <th>No. control</th>
-            <th>CURP</th>
-            <th>Nombre</th>
-            <th>Carrera</th>
-            <th>Campus</th>
-            <th>Foto</th>
-            <th>Firma</th>
-            <th>Imprime</th>
-            <th>Último</th>
-            <th>Acción</th>
+            <th>Alumno</th>
+            <th>Turno</th>
+            <th>Biométricos</th>
+            <th>Estatus</th>
+            <th>Acciones</th>
           </tr>
         </thead>
-        <tbody>
+        <tbody id="dashboardRows">
         <?php if (empty($worklist)): ?>
-          <tr><td colspan="10" class="d-empty">Sin alumnos atendidos para este filtro.</td></tr>
+          <tr><td colspan="5" class="d-empty">No se encontraron alumnos para este filtro.</td></tr>
         <?php else: ?>
-          <?php
-            $badge = function(string $s){
-              $map = [
-                'listo'     => 'd-badge d-badge--success',
-                'pendiente' => 'd-badge d-badge--muted',
-                'rechazado' => 'd-badge d-badge--danger',
-                'proceso'   => 'd-badge d-badge--warn',
-              ];
-              return $map[$s] ?? 'd-badge d-badge--muted';
-            };
-          ?>
           <?php foreach ($worklist as $r): ?>
             <tr>
-              <td class="mono"><?= esc($r['no_control']) ?></td>
-              <td class="mono"><?= esc($r['curp']) ?></td>
-              <td><?= esc($r['nombre']) ?></td>
-              <td><?= esc($r['carrera']) ?></td>
-              <td><?= esc($r['campus']) ?></td>
-              <td><span class="<?= $badge($r['foto']) ?>"><?= esc($r['foto']) ?></span></td>
-              <td><span class="<?= $badge($r['firma']) ?>"><?= esc($r['firma']) ?></span></td>
-              <td><span class="<?= $badge($r['imprime']) ?>"><?= esc($r['imprime']) ?></span></td>
-              <td class="mono"><?= esc($r['updated_at']) ?></td>
               <td>
-                <a class="d-btn d-btn--tiny" href="#">Abrir</a>
+                <div class="d-row-title"><?= esc($r['nombre']) ?></div>
+                <div class="d-row-sub mono"><?= esc($r['identificador']) ?><?= !empty($r['numero_ficha']) ? ' · Ficha ' . esc($r['numero_ficha']) : '' ?></div>
+                <div class="d-row-sub"><?= esc($r['carrera']) ?> · <?= esc($r['campus']) ?></div>
+              </td>
+              <td>
+                <div class="d-row-title"><?= esc($r['folio'] ?: 'Sin turno activo') ?></div>
+                <div class="d-row-sub"><?= esc($r['etapa_nombre']) ?></div>
+                <div class="d-row-sub mono"><?= esc((string) ($r['updated_at'] ?? '—')) ?></div>
+              </td>
+              <td>
+                <div class="d-badge-group">
+                  <span class="d-badge <?= !empty($r['has_foto']) ? 'd-badge--success' : 'd-badge--muted' ?>">Foto</span>
+                  <span class="d-badge <?= !empty($r['has_firma']) ? 'd-badge--success' : 'd-badge--muted' ?>">Firma</span>
+                  <span class="d-badge <?= !empty($r['has_huella']) ? 'd-badge--success' : 'd-badge--muted' ?>">Huella</span>
+                </div>
+              </td>
+              <td>
+                <div class="d-actions-group">
+                  <select class="d-select" data-role="status-select" <?= !empty($r['turno_id']) ? '' : 'disabled' ?>>
+                    <?php foreach (($statusOptions ?? []) as $statusOption): ?>
+                      <option value="<?= esc((string) $statusOption['id_estatus']) ?>" <?= (int) ($statusOption['id_estatus'] ?? 0) === (int) ($r['estatus_id'] ?? 0) ? 'selected' : '' ?>>
+                        <?= esc($statusOption['nombre']) ?>
+                      </option>
+                    <?php endforeach; ?>
+                  </select>
+                  <button class="d-btn d-btn--primary" data-action="save-status" <?= !empty($r['turno_id']) ? '' : 'disabled' ?>>Guardar estatus</button>
+                </div>
+              </td>
+              <td>
+                <div class="d-actions-group">
+                  <button class="d-btn d-btn--danger" data-action="clear-biometric" data-type="foto" <?= !empty($r['turno_id']) && !empty($r['has_foto']) ? '' : 'disabled' ?>>Borrar foto</button>
+                  <button class="d-btn d-btn--danger" data-action="clear-biometric" data-type="firma" <?= !empty($r['turno_id']) && !empty($r['has_firma']) ? '' : 'disabled' ?>>Borrar firma</button>
+                  <button class="d-btn d-btn--danger" data-action="clear-biometric" data-type="huella" <?= !empty($r['turno_id']) && !empty($r['has_huella']) ? '' : 'disabled' ?>>Borrar huella</button>
+                </div>
               </td>
             </tr>
           <?php endforeach; ?>
@@ -88,11 +107,24 @@
       </table>
     </div>
   </div>
-
 </section>
+
+<div class="d-toast" id="dashboardToast" role="status" aria-live="polite"></div>
 
 <?= $this->endSection() ?>
 
 <?= $this->section('scripts') ?>
+  <script id="dashboardConfig"
+    data-fetch-url="<?= site_url('admin/dashboard/alumnos') ?>"
+    data-status-url="<?= site_url('admin/dashboard/estatus') ?>"
+    data-clear-url="<?= site_url('admin/dashboard/biometrico/eliminar') ?>"
+    data-csrf-name="<?= csrf_token() ?>"
+    data-csrf-hash="<?= csrf_hash() ?>"
+  ></script>
+  <script id="dashboardState" type="application/json"><?= json_encode([
+      'items' => $worklist ?? [],
+      'statusOptions' => $statusOptions ?? [],
+      'kpis' => $kpis ?? [],
+  ], JSON_UNESCAPED_UNICODE) ?></script>
   <script src="<?= base_url('assets/js/dashboard.js') ?>"></script>
 <?= $this->endSection() ?>

@@ -1,13 +1,13 @@
 <section class="d-center">
   <div class="d-card">
 
-    <div class="d-pad-wrap">
-      <canvas id="sigCanvas" class="d-pad"></canvas>
+    <div class="d-actions d-actions--3" style="margin-bottom: 12px;">
+      <button type="button" class="d-btn" id="btnClear" disabled>Borrar</button>
+      <button type="button" class="d-btn d-btn--primary" id="btnSave" disabled>Confirmar captura</button>
     </div>
 
-    <div class="d-actions">
-      <button type="button" class="d-btn" id="btnClear" disabled>Borrar</button>
-      <button type="button" class="d-btn d-btn--primary" id="btnSave" disabled>Guardar</button>
+    <div class="d-pad-wrap">
+      <canvas id="sigCanvas" class="d-pad"></canvas>
     </div>
 
 <div class="d-side__title">Vista previa</div>

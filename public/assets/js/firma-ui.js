@@ -1,4 +1,8 @@
 (() => {
+  if (!window.__FIRMA__) {
+    return;
+  }
+
   // ====== refs UI ======
   const colaList   = document.getElementById("colaList");
   const colaSearch = document.getElementById("colaSearch");
@@ -14,17 +18,20 @@
   const alumnoIdEl = document.getElementById("alumnoId");
   const turnoIdEl  = document.getElementById("turnoId");
 
-  const btnStart = document.getElementById("btnStart");
   const btnClear = document.getElementById("btnClear");
   const btnSave  = document.getElementById("btnSave");
 
-  const chkBg = document.getElementById("chkBg");
-
   const preview = document.getElementById("sigPreview");
   const previewEmpty = document.getElementById("sigPreviewEmpty");
+  const canvas = document.getElementById("sigCanvas");
+  let selectedTurnoId = Number(turnoIdEl.value || 0);
+
+  if (!colaList || !colaSearch || !colaCount || !capNombre || !capControl || !capCarrera || !capSemestre || !capEstatus || !capStatus || !alumnoIdEl || !turnoIdEl || !btnClear || !btnSave || !preview || !previewEmpty || !canvas) {
+    console.error("[firma] Faltan elementos requeridos en la vista.");
+    return;
+  }
 
   // ====== Canvas firma ======
-  const canvas = document.getElementById("sigCanvas");
   const ctx = canvas.getContext("2d");
 
   let drawing = false;
@@ -44,11 +51,6 @@
   function resetPad(keepPreview = true) {
     const rect = canvas.getBoundingClientRect();
     ctx.clearRect(0, 0, rect.width, rect.height);
-
-    if (chkBg.checked) {
-      ctx.fillStyle = "#fff";
-      ctx.fillRect(0, 0, rect.width, rect.height);
-    }
 
     ctx.lineCap = "round";
     ctx.lineJoin = "round";
@@ -84,6 +86,9 @@
     ctx.stroke();
     last = p;
     hasInk = true;
+    if (!btnClear.disabled) {
+      btnSave.disabled = false;
+    }
     e.preventDefault();
   }
   function up(e) {
@@ -99,33 +104,18 @@
   window.addEventListener("resize", resizeCanvas);
   resizeCanvas();
 
-  chkBg.addEventListener("change", () => resetPad(true));
-
   // ====== Estado botones ======
   function setCaptureEnabled(enabled) {
     btnClear.disabled = !enabled;
-    btnSave.disabled  = !enabled;
+    btnSave.disabled  = !enabled || !hasInk;
   }
 
   setCaptureEnabled(false);
 
-  btnStart.addEventListener("click", () => {
-    const alumnoId = Number(alumnoIdEl.value || 0);
-    const turnoId  = Number(turnoIdEl.value || 0);
-
-    if (!alumnoId || !turnoId) {
-      capStatus.textContent = "Primero selecciona un alumno desde la cola.";
-      return;
-    }
-
-    resetPad(true);
-    setCaptureEnabled(true);
-    capStatus.textContent = "Listo. Captura la firma y presiona Guardar.";
-  });
-
   btnClear.addEventListener("click", () => {
     resetPad(true);
-    capStatus.textContent = "Firma limpiada. Captura nuevamente.";
+    setCaptureEnabled(Number(alumnoIdEl.value || 0) > 0 && Number(turnoIdEl.value || 0) > 0);
+    capStatus.textContent = "Firma limpiada. Vuelve a capturar y confirma la firma.";
   });
 
   // ====== Guardar firma ======
@@ -167,16 +157,17 @@
       preview.style.display = "";
       previewEmpty.style.display = "none";
 
-      capStatus.textContent = "Firma guardada correctamente.";
-      setCaptureEnabled(false); // opcional: bloquear hasta que selecciones otro
+      capStatus.textContent = "Firma guardada correctamente. Selecciona el siguiente alumno para continuar.";
+      setCaptureEnabled(false);
       hasInk = false;
+      selectedTurnoId = Number(json?.current?.turno_id || 0);
 
       // refresca cola por si se mueve a siguiente estado
-      fetchCola();
+      await fetchCola(true);
 
     } catch (e) {
       capStatus.textContent = e.message || "Error al guardar firma.";
-      btnSave.disabled = false;
+      btnSave.disabled = !hasInk;
     }
   });
 
@@ -198,7 +189,7 @@
     }
 
     colaList.innerHTML = list.map(a => `
-      <div class="d-queue-item"
+      <div class="${Number(a.turno_id) === selectedTurnoId ? "d-queue-item is-active" : "d-queue-item"}"
            data-alumno-id="${a.alumno_id}"
            data-turno-id="${a.turno_id}"
            data-nombre="${escapeHtml(a.nombre)}"
@@ -214,7 +205,7 @@
         </div>
         <div class="d-queue-meta">
           Turno <strong>${escapeHtml(a.turno)}</strong><br>
-          ${escapeHtml(a.estatus)}
+          Listo para capturar
         </div>
       </div>
     `).join("");
@@ -231,12 +222,16 @@
     capCarrera.textContent  = data.carrera || "—";
     capSemestre.textContent = data.semestre || "—";
     capEstatus.textContent  = data.estatus || "—";
+    selectedTurnoId = Number(data.turnoId || 0);
 
-    // resetea pad y preview al cambiar alumno
-    setCaptureEnabled(false);
+    // resetea pad y deja la captura lista al cambiar alumno
     resetPad(false);
+    setCaptureEnabled(true);
 
-    capStatus.textContent = "Alumno cargado. Presiona “Preparar” para capturar firma.";
+    colaList.querySelectorAll(".d-queue-item").forEach((item) => item.classList.remove("is-active"));
+    el.classList.add("is-active");
+
+    capStatus.textContent = "Alumno seleccionado. Captura la firma y confirma la captura.";
   }
 
   colaList.addEventListener("click", (e) => {
@@ -254,22 +249,65 @@
     renderCola(filtered);
   });
 
-  async function fetchCola() {
+  function filterQueue(items) {
+    const q = (colaSearch.value || "").toLowerCase().trim();
+
+    return !q ? items : items.filter(a =>
+      String(a.nombre).toLowerCase().includes(q) ||
+      String(a.no_control).toLowerCase().includes(q)
+    );
+  }
+
+  async function fetchCola(selectAfterLoad = false) {
     try {
       const res = await fetch(window.__FIRMA__.colaUrl, { method: "GET" });
       if (!res.ok) return;
       const json = await res.json();
       colaData = Array.isArray(json?.items) ? json.items : [];
-      const q = (colaSearch.value || "").toLowerCase().trim();
-      const list = !q ? colaData : colaData.filter(a =>
-        String(a.nombre).toLowerCase().includes(q) ||
-        String(a.no_control).toLowerCase().includes(q)
-      );
+      const list = filterQueue(colaData);
       renderCola(list);
+
+      const selectedStillExists = colaData.some((item) => Number(item.turno_id) === selectedTurnoId);
+
+      if (selectedStillExists) {
+        const selectedNode = colaList.querySelector(`[data-turno-id="${selectedTurnoId}"]`);
+        if (selectedNode) {
+          colaList.querySelectorAll(".d-queue-item").forEach((item) => item.classList.remove("is-active"));
+          selectedNode.classList.add("is-active");
+          return;
+        }
+      }
+
+      if (selectAfterLoad || (!selectedStillExists && list.length > 0)) {
+        const firstNode = colaList.querySelector(".d-queue-item");
+        if (firstNode) {
+          applySelected(firstNode);
+          return;
+        }
+      }
+
+      if (!list.length) {
+        alumnoIdEl.value = "0";
+        turnoIdEl.value = "0";
+        selectedTurnoId = 0;
+        capNombre.textContent = "—";
+        capControl.textContent = "—";
+        capCarrera.textContent = "—";
+        capSemestre.textContent = "—";
+        capEstatus.textContent = "—";
+        resetPad(false);
+        setCaptureEnabled(false);
+        capStatus.textContent = "No hay alumnos pendientes de firma en este momento.";
+      }
     } catch (_) {}
   }
 
+  if (Number(alumnoIdEl.value || 0) > 0 && Number(turnoIdEl.value || 0) > 0) {
+    setCaptureEnabled(true);
+    capStatus.textContent = "Alumno listo para capturar firma. Dibuja y confirma la captura.";
+  }
+
   // polling ligero
-  fetchCola();
-  setInterval(fetchCola, 2500);
+  fetchCola(true);
+  setInterval(fetchCola, 5000);
 })();

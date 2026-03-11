@@ -8,7 +8,7 @@
     <div class="d-card__title"><!--?= esc($title) ?--></div>
 
     <label class="d-toggle">
-      <input id="chkWhiteBg" type="checkbox" checked>
+      <input id="chkWhiteBg" type="checkbox">
       <span>Fondo blanco</span>
     </label>
   </div>

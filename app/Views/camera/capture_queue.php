@@ -5,10 +5,6 @@
   <!-- CSS módulo + CSS común (reemplaza el <style> inline) -->
   <link rel="stylesheet" href="<?= base_url('assets/css/capture-queue.css') ?>">
   <link rel="stylesheet" href="<?= base_url('assets/css/capture-common.css') ?>">
-
-  <!-- MediaPipe -->
-  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/selfie_segmentation.js"></script>
 <?= $this->endSection() ?>
 
 <?= $this->section('content') ?>

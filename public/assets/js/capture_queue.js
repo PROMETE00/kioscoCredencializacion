@@ -11,11 +11,12 @@
 
     // UI: datos persona
     const studentIdEl = document.getElementById('studentId');
-    const pNombre  = document.getElementById('pNombre');
-    const pControl = document.getElementById('pControl');
-    const pCarrera = document.getElementById('pCarrera');
-    const pSemestre= document.getElementById('pSemestre');
-    const pEstatus = document.getElementById('pEstatus');
+    const turnoIdEl = document.getElementById('turnoId');
+    const pNombre  = document.getElementById('alNombre');
+    const pControl = document.getElementById('alControl');
+    const pCarrera = document.getElementById('alCarrera');
+    const pSemestre= document.getElementById('alSemestre');
+    const pEstatus = document.getElementById('alEstatus');
 
     // UI cola
     const qList   = document.getElementById('queueList');
@@ -56,7 +57,8 @@
     // ---- Render datos alumno ----
     function renderCurrent(c) {
       current = c || null;
-      studentIdEl.value = c?.id || '';
+      studentIdEl.value = c?.alumno_id || c?.id || '';
+      if (turnoIdEl) turnoIdEl.value = c?.turno_id || '';
       pNombre.textContent   = c?.nombre || '—';
       pControl.textContent  = c?.no_control || '—';
       pCarrera.textContent  = c?.carrera || '—';
@@ -65,6 +67,8 @@
       if (saveInfo) saveInfo.textContent = '—';
       if (preview) preview.removeAttribute('src');
       btnSave.disabled = true;
+      lastFrameBlob = null;
+      lastFrameFilename = null;
     }
 
     // ---- Render cola ----
@@ -78,8 +82,9 @@
       qList.innerHTML = '';
       items.forEach(x => {
         const li = document.createElement('li');
-        li.className = 'd-qItem' + ((current && x.id === current.id) ? ' is-active' : '');
-        li.dataset.id = x.id;
+          li.className = 'd-qItem' + ((current && Number(x.turno_id) === Number(current.turno_id)) ? ' is-active' : '');
+          li.dataset.id = x.alumno_id;
+          li.dataset.turnoId = x.turno_id;
 
         li.innerHTML = `
           <div class="d-qName">${escapeHtml(x.nombre || '—')}</div>
@@ -112,11 +117,26 @@
     }
 
     // ---- Cámara (igual que tu versión robusta) ----
-    let started = false;
-    let stream = null;
-    let selfieSegmentation = null;
-    let lastFrameDataUrl = null;
-    let rafId = null;
+     let started = false;
+     let stream = null;
+     let selfieSegmentation = null;
+     let mediaPipeLoader = null;
+     let whiteBgState = 'idle';
+     let segmentationInFlight = false;
+     let lastSegmentationAt = 0;
+     let hasSegmentedFrame = false;
+     let lastFrameBlob = null;
+     let lastFrameFilename = null;
+     let rafId = null;
+
+     const SEGMENTATION_INTERVAL_MS = 140;
+     const SEGMENTATION_MAX_WIDTH = 640;
+     const SEGMENTATION_LOAD_TIMEOUT_MS = 12000;
+
+     const segmentationInputCanvas = document.createElement('canvas');
+     const segmentationInputCtx = segmentationInputCanvas.getContext('2d', { willReadFrequently: true });
+     const segmentationOutputCanvas = document.createElement('canvas');
+     const segmentationOutputCtx = segmentationOutputCanvas.getContext('2d');
 
     const fitCanvasToVideo = () => {
       const w = video.videoWidth || 1280;
@@ -130,50 +150,146 @@
       ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
     };
 
-    const drawWithWhiteBackground = (results) => {
-      fitCanvasToVideo();
-      const w = canvas.width, h = canvas.height;
+    const fitSegmentationCanvas = () => {
+      const sourceWidth = video.videoWidth || 1280;
+      const sourceHeight = video.videoHeight || 720;
+      const ratio = sourceHeight / sourceWidth;
+      const width = Math.min(sourceWidth, SEGMENTATION_MAX_WIDTH);
+      const height = Math.max(1, Math.round(width * ratio));
 
-      ctx.save();
-      ctx.clearRect(0, 0, w, h);
-
-      ctx.drawImage(results.segmentationMask, 0, 0, w, h);
-
-      ctx.globalCompositeOperation = 'source-in';
-      ctx.drawImage(results.image, 0, 0, w, h);
-
-      ctx.globalCompositeOperation = 'destination-over';
-      ctx.fillStyle = '#ffffff';
-      ctx.fillRect(0, 0, w, h);
-
-      ctx.globalCompositeOperation = 'source-over';
-      ctx.restore();
+      if (segmentationInputCanvas.width !== width) segmentationInputCanvas.width = width;
+      if (segmentationInputCanvas.height !== height) segmentationInputCanvas.height = height;
+      if (segmentationOutputCanvas.width !== width) segmentationOutputCanvas.width = width;
+      if (segmentationOutputCanvas.height !== height) segmentationOutputCanvas.height = height;
     };
 
-    const initSegmentationIfAvailable = async () => {
-      if (typeof window.SelfieSegmentation === 'undefined') {
-        console.warn('SelfieSegmentation no está definido.');
+    const drawWithWhiteBackground = (results) => {
+      const w = segmentationOutputCanvas.width;
+      const h = segmentationOutputCanvas.height;
+
+      segmentationOutputCtx.save();
+      segmentationOutputCtx.clearRect(0, 0, w, h);
+      segmentationOutputCtx.drawImage(results.segmentationMask, 0, 0, w, h);
+      segmentationOutputCtx.globalCompositeOperation = 'source-in';
+      segmentationOutputCtx.drawImage(results.image, 0, 0, w, h);
+      segmentationOutputCtx.globalCompositeOperation = 'destination-over';
+      segmentationOutputCtx.fillStyle = '#ffffff';
+      segmentationOutputCtx.fillRect(0, 0, w, h);
+      segmentationOutputCtx.globalCompositeOperation = 'source-over';
+      segmentationOutputCtx.restore();
+
+      hasSegmentedFrame = true;
+    };
+
+    const drawSegmentedFrame = () => {
+      if (!hasSegmentedFrame) {
+        drawPlain();
         return;
       }
-      selfieSegmentation = new window.SelfieSegmentation({
-        locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/${file}`
-      });
-      selfieSegmentation.setOptions({ modelSelection: 1 });
-      selfieSegmentation.onResults((results) => {
-        if (chkWhiteBg?.checked) drawWithWhiteBackground(results);
-        else {
-          fitCanvasToVideo();
-          ctx.drawImage(results.image, 0, 0, canvas.width, canvas.height);
+
+      fitCanvasToVideo();
+      ctx.drawImage(segmentationOutputCanvas, 0, 0, canvas.width, canvas.height);
+    };
+
+    const loadScriptOnce = (src) => new Promise((resolve, reject) => {
+      const existing = document.querySelector(`script[src="${src}"]`);
+      if (existing) {
+        if (existing.dataset.loaded === 'true') return resolve();
+        existing.addEventListener('load', () => resolve(), { once: true });
+        existing.addEventListener('error', () => reject(new Error(`No se pudo cargar ${src}`)), { once: true });
+        return;
+      }
+
+      const script = document.createElement('script');
+      script.src = src;
+      script.async = true;
+      script.addEventListener('load', () => {
+        script.dataset.loaded = 'true';
+        resolve();
+      }, { once: true });
+      script.addEventListener('error', () => reject(new Error(`No se pudo cargar ${src}`)), { once: true });
+      document.head.appendChild(script);
+    });
+
+    const withTimeout = (promise, ms, label) => Promise.race([
+      promise,
+      new Promise((_, reject) => setTimeout(() => reject(new Error(`${label} tardó demasiado en cargar`)), ms)),
+    ]);
+
+    const warmupWhiteBackground = () => {
+      if (whiteBgState === 'ready' || whiteBgState === 'loading') return;
+
+      whiteBgState = 'loading';
+
+      if (!mediaPipeLoader) {
+        mediaPipeLoader = withTimeout((async () => {
+          await loadScriptOnce('https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js');
+          await loadScriptOnce('https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/selfie_segmentation.js');
+          return true;
+        })(), SEGMENTATION_LOAD_TIMEOUT_MS, 'El fondo blanco');
+      }
+
+      mediaPipeLoader.then(() => {
+        if (selfieSegmentation || typeof window.SelfieSegmentation === 'undefined') {
+          whiteBgState = selfieSegmentation ? 'ready' : 'error';
+          return;
         }
+
+        fitSegmentationCanvas();
+        selfieSegmentation = new window.SelfieSegmentation({
+          locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/${file}`
+        });
+        selfieSegmentation.setOptions({ modelSelection: 0 });
+        selfieSegmentation.onResults((results) => {
+          segmentationInFlight = false;
+          drawWithWhiteBackground(results);
+        });
+        whiteBgState = 'ready';
+
+        if (chkWhiteBg?.checked) {
+          setStatus('Fondo blanco activado.');
+          showToast('Fondo blanco listo');
+        }
+      }).catch((error) => {
+        console.warn(error);
+        whiteBgState = 'error';
+        segmentationInFlight = false;
+        hasSegmentedFrame = false;
+        if (chkWhiteBg) chkWhiteBg.checked = false;
+        setStatus('No se pudo activar el fondo blanco. La cámara seguirá normal.');
+        showToast('Fondo blanco no disponible');
       });
     };
 
-    const loop = async () => {
+    const requestSegmentationFrame = () => {
+      if (!selfieSegmentation || segmentationInFlight) return;
+
+      fitSegmentationCanvas();
+      segmentationInputCtx.drawImage(video, 0, 0, segmentationInputCanvas.width, segmentationInputCanvas.height);
+      segmentationInFlight = true;
+      lastSegmentationAt = performance.now();
+
+      selfieSegmentation.send({ image: segmentationInputCanvas }).catch((error) => {
+        console.warn(error);
+        segmentationInFlight = false;
+        hasSegmentedFrame = false;
+      });
+    };
+
+    const loop = () => {
       if (!started) return;
 
-      if (selfieSegmentation) {
-        try { await selfieSegmentation.send({ image: video }); }
-        catch (e) { drawPlain(); }
+      if (chkWhiteBg?.checked) {
+        drawSegmentedFrame();
+
+        if (whiteBgState === 'ready') {
+          const now = performance.now();
+          if (!segmentationInFlight && (now - lastSegmentationAt) >= SEGMENTATION_INTERVAL_MS) {
+            requestSegmentationFrame();
+          }
+        } else if (whiteBgState === 'idle') {
+          warmupWhiteBackground();
+        }
       } else {
         drawPlain();
       }
@@ -196,8 +312,8 @@
         started = true;
         btnStart.disabled = true;
         btnShot.disabled = false;
+        warmupWhiteBackground();
 
-        await initSegmentationIfAvailable();
         setLoading(false);
         setStatus('Cámara lista. Selecciona alumno (cola) y captura foto.');
         showToast('Cámara iniciada');
@@ -209,6 +325,32 @@
       }
     };
 
+    chkWhiteBg?.addEventListener('change', () => {
+      if (!started) return;
+
+      if (!chkWhiteBg.checked) {
+        hasSegmentedFrame = false;
+        setStatus('Fondo blanco desactivado.');
+        return;
+      }
+
+      if (whiteBgState === 'ready') {
+        setStatus('Fondo blanco activado.');
+        requestSegmentationFrame();
+        return;
+      }
+
+      if (whiteBgState === 'error') {
+        chkWhiteBg.checked = false;
+        setStatus('No se pudo activar el fondo blanco.');
+        showToast('Fondo blanco no disponible');
+        return;
+      }
+
+      setStatus('Activando fondo blanco…');
+      warmupWhiteBackground();
+    });
+
     const takePhoto = () => {
       if (!started) return;
       if (!studentIdEl.value) {
@@ -216,16 +358,31 @@
         setStatus('Selecciona un alumno de la cola antes de capturar.');
         return;
       }
-      lastFrameDataUrl = canvas.toDataURL('image/jpeg', 0.92);
-      if (preview) preview.src = lastFrameDataUrl;
-      btnSave.disabled = false;
-      setStatus('Foto capturada. Presiona Guardar.');
-      showToast('Foto capturada');
+      canvas.toBlob((blob) => {
+        if (!blob) {
+          setStatus('No se pudo capturar la foto.');
+          showToast('Error al capturar');
+          return;
+        }
+
+        if (lastFrameFilename) {
+          URL.revokeObjectURL(lastFrameFilename);
+        }
+
+        lastFrameBlob = blob;
+        lastFrameFilename = URL.createObjectURL(blob);
+
+        if (preview) preview.src = lastFrameFilename;
+        btnSave.disabled = false;
+        setStatus('Foto capturada. Presiona Guardar.');
+        showToast('Foto capturada');
+      }, 'image/jpeg', 0.85);
     };
 
     const save = async () => {
       const sid = studentIdEl.value;
-      if (!sid || !lastFrameDataUrl) return;
+      const turnoId = turnoIdEl?.value || '';
+      if (!sid || !turnoId || !lastFrameBlob) return;
 
       btnSave.disabled = true;
       setLoading(true, 'Guardando…');
@@ -233,8 +390,9 @@
 
       try {
         const fd = new FormData();
-        fd.append('image', lastFrameDataUrl);
+        fd.append('image', await blobToDataUrl(lastFrameBlob));
         fd.append('student_id', sid);
+        fd.append('turno_id', turnoId);
         if (CSRF_NAME && CSRF_HASH) fd.append(CSRF_NAME, CSRF_HASH);
 
         const res = await fetch(SAVE_URL, { method: 'POST', body: fd });
@@ -254,11 +412,9 @@
         showToast('Guardado ✅');
 
         // quitar de cola al alumno guardado
-        const savedId = parseInt(sid, 10);
-        queue = queue.filter(x => x.id !== savedId);
+        queue = Array.isArray(json.queue) ? json.queue : queue.filter(x => Number(x.turno_id) !== Number(turnoId));
 
-        // cargar siguiente automáticamente (primero de la cola)
-        const next = queue.length ? queue[0] : null;
+        const next = json.current || (queue.length ? queue[0] : null);
         renderCurrent(next);
 
         renderQueue(qSearch?.value || '');
@@ -271,6 +427,13 @@
         setStatus('Error inesperado al guardar.');
       }
     };
+
+    const blobToDataUrl = (blob) => new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => typeof reader.result === 'string' ? resolve(reader.result) : reject(new Error('No se pudo leer la imagen.'));
+      reader.onerror = () => reject(new Error('No se pudo leer la imagen.'));
+      reader.readAsDataURL(blob);
+    });
 
     // eventos
     btnStart.addEventListener('click', startCamera);
