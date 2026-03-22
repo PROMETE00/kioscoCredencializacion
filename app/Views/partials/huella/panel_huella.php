@@ -1,4 +1,10 @@
 <section class="d-card d-huella">
+  <div class="d-meta" style="margin-bottom:12px;">
+    <div class="d-meta__row">
+      <span class="d-meta__label">Status</span>
+      <span class="d-meta__value" id="fpStatus">Select a student to start fingerprint capture.</span>
+    </div>
+  </div>
 
 
   <!-- Stepper -->

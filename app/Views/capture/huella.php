@@ -39,5 +39,12 @@
   data-alumno-url="<?= site_url('captura/huella/alumno') ?>"
 ></script>
 
+<script id="pageData" type="application/json">
+<?= json_encode([
+  'current' => $current ?? null,
+  'queue'   => $queue ?? [],
+], JSON_UNESCAPED_UNICODE) ?>
+</script>
+
 <script src="<?= base_url('assets/js/huella-ui.js') ?>"></script>
 <?= $this->endSection() ?>

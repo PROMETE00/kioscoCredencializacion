@@ -3,6 +3,7 @@
 namespace App\Controllers;
 
 use App\Models\HuellaModel;
+use RuntimeException;
 
 class HuellaController extends BaseController
 {
@@ -21,17 +22,11 @@ class HuellaController extends BaseController
             'title'      => 'Captura de Huella',
             'activeMenu' => 'huella',
             'userName'   => 'Usuario',
-
-            // Para el panel izquierdo (mismo shape que Foto/Firma)
             'current'    => $current,
-            // Para el panel derecho
             'queue'      => $queue,
         ]);
     }
 
-    /**
-     * Devuelve la cola en JSON para pintar con JS.
-     */
     public function cola()
     {
         $model = new HuellaModel();
@@ -42,10 +37,6 @@ class HuellaController extends BaseController
         ]);
     }
 
-    /**
-     * Trae el alumno por turnoId o por alumnoId para rellenar panel izquierdo.
-     * Soporta: /captura/huella/alumno?turnoId=123  o  ?alumnoId=5
-     */
     public function alumno()
     {
         $turnoId  = (int)($this->request->getGet('turnoId') ?? 0);
@@ -66,35 +57,45 @@ class HuellaController extends BaseController
         ]);
     }
 
-    /**
-     * Guardar huella (plantilla/base64/archivo/etc.).
-     * Por ahora solo valida que venga alumnoId/turnoId, y deja el hook para tu implementación real.
-     */
     public function guardar()
     {
         $model = new HuellaModel();
 
-        $alumnoId = (int)($this->request->getPost('alumnoId') ?? 0);
-        $turnoId  = (int)($this->request->getPost('turnoId') ?? 0);
-
-        // Puede venir template/imagen desde tu servicio/SDK:
+        $alumnoId = (int)($this->request->getPost('alumnoId') ?? $this->request->getPost('student_id') ?? 0);
+        $turnoId  = (int)($this->request->getPost('turnoId') ?? $this->request->getPost('turn_id') ?? 0);
         $template = (string)($this->request->getPost('template') ?? '');
         $imageB64 = (string)($this->request->getPost('image') ?? '');
+        $quality  = (int)($this->request->getPost('quality') ?? 0);
 
-        if ($alumnoId <= 0 && $turnoId <= 0) {
+        if ($alumnoId <= 0 || $turnoId <= 0) {
             return $this->response->setStatusCode(400)->setJSON([
                 'ok'  => false,
-                'msg' => 'Falta alumnoId o turnoId',
+                'msg' => 'Missing student or turn identifier.',
             ]);
         }
 
-        // TODO: aquí llamarías a $model->saveHuella(...)
-        // Ejemplo:
-        // $ok = $model->saveHuella($alumnoId, $turnoId, $template, $imageB64);
+        if ($template === '' || $imageB64 === '' || !str_starts_with($imageB64, 'data:image/')) {
+            return $this->response->setStatusCode(400)->setJSON([
+                'ok'  => false,
+                'msg' => 'The fingerprint payload is incomplete.',
+            ]);
+        }
+
+        try {
+            $result = $model->saveFingerprint($alumnoId, $turnoId, $template, $imageB64, $quality);
+        } catch (RuntimeException $e) {
+            return $this->response->setStatusCode(400)->setJSON([
+                'ok'  => false,
+                'msg' => $e->getMessage(),
+            ]);
+        }
 
         return $this->response->setJSON([
             'ok'  => true,
-            'msg' => 'Guardado pendiente de integrar con lector/SDK',
+            'msg' => 'Fingerprint saved successfully.',
+            'url' => $result['url'],
+            'queue' => $model->getQueue(),
+            'current' => $model->getNextPending(),
         ]);
     }
 }
