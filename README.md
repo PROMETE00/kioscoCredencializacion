@@ -105,14 +105,6 @@ public/
 tests/             Pruebas base de CodeIgniter
 ```
 
-## Riesgos tecnicos detectados
-
-- `README.md` estaba desalineado con el sistema real.
-- `app/Views/captura/` y `app/Views/capture/` mezclan nombres en espanol e ingles.
-- `app/Database/Migrations/` no contiene migraciones reales del dominio.
-- `app/Models/DashboardModel.php` depende de `vw_dashboard_worklist` sin documentacion del esquema.
-- `app/Models/FirmaModel.php` y `app/Models/HuellaModel.php` siguen como placeholders.
-
 ## Setup rapido (Recomendado con Docker)
 
 El proyecto está preparado para ejecutarse fácilmente usando Docker y Docker Compose, incluyendo la base de datos y un servidor web.
