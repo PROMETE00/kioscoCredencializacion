@@ -113,9 +113,38 @@ tests/             Pruebas base de CodeIgniter
 - `app/Models/DashboardModel.php` depende de `vw_dashboard_worklist` sin documentacion del esquema.
 - `app/Models/FirmaModel.php` y `app/Models/HuellaModel.php` siguen como placeholders.
 
-## Setup rapido
+## Setup rapido (Recomendado con Docker)
 
-1. Ajusta `.env` con `baseURL` y conexion a base de datos.
+El proyecto está preparado para ejecutarse fácilmente usando Docker y Docker Compose, incluyendo la base de datos y un servidor web.
+
+1. **Clona el repositorio** y entra al directorio.
+2. **Crea el archivo de entorno**: Copia el archivo de ejemplo para que CodeIgniter tome las variables.
+   ```bash
+   cp .env.example .env
+   ```
+3. **Levanta los contenedores**:
+   ```bash
+   docker compose up -d
+   ```
+4. **Instala dependencias y ejecuta migraciones/seeders**:
+   Ejecuta estos comandos dentro del contenedor de la aplicación:
+   ```bash
+   docker compose exec app composer install
+   docker compose exec app php spark migrate
+   docker compose exec app php spark db:seed AuthSeeder
+   ```
+
+El sistema estará disponible en `http://localhost:8080/`.
+
+**Credenciales por defecto:**
+- Al ejecutar el `AuthSeeder`, se crean usuarios para cada estación y un administrador.
+- El usuario administrador es `admin` y la contraseña por defecto es `admin123` (configurable en el archivo `.env` mediante `SEED_ADMIN_PASSWORD`). **¡Cambia estas contraseñas en producción!**
+
+---
+
+## Setup manual (Sin Docker)
+
+1. Crea el archivo `.env` a partir de `.env.example` y ajusta la conexión a tu base de datos local.
 2. Instala dependencias con:
 
 ```bash

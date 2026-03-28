@@ -1,0 +1,71 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: kiosco_app
+    ports:
+      - "8080:80"
+    environment:
+      - CI_ENVIRONMENT=development
+      - app.baseURL=http://localhost:8080/
+      - database.default.hostname=db
+      - database.default.database=kiosco
+      - database.default.username=kiosco_user
+      - database.default.password=kiosco_secret
+      - database.default.DBDriver=MySQLi
+      - SEED_DEFAULT_PASSWORD=changeme
+      - SEED_ADMIN_PASSWORD=admin123
+    volumes:
+      - .:/var/www/html
+      # Keep the generated vendor folder inside the container
+      - /var/www/html/vendor
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - kiosco_network
+
+  db:
+    image: mysql:8.0
+    container_name: kiosco_db
+    restart: unless-stopped
+    environment:
+      - MYSQL_ROOT_PASSWORD=root_secret
+      - MYSQL_DATABASE=kiosco
+      - MYSQL_USER=kiosco_user
+      - MYSQL_PASSWORD=kiosco_secret
+    ports:
+      - "3306:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot_secret"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - kiosco_network
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: kiosco_pma
+    environment:
+      - PMA_HOST=db
+      - PMA_USER=root
+      - PMA_PASSWORD=root_secret
+    ports:
+      - "8081:80"
+    depends_on:
+      - db
+    networks:
+      - kiosco_network
+
+networks:
+  kiosco_network:
+    driver: bridge
+
+volumes:
+  db_data:

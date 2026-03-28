@@ -30,14 +30,17 @@ class AuthSeeder extends Seeder
             return (int)($row['id'] ?? 0);
         };
 
-        // 2) Usuarios base (passwords de ejemplo; cámbialas luego)
+        // 2) Usuarios base (passwords leídas de variable de entorno o por defecto)
+        $defaultPassword = getenv('SEED_DEFAULT_PASSWORD') ?: 'changeme';
+        $adminPassword   = getenv('SEED_ADMIN_PASSWORD') ?: $defaultPassword;
+
         $users = [
-            ['usuario'=>'admin',    'nombre'=>'Administrador',      'email'=>null, 'pass'=>'Admin.2026!',   'rol'=>'ADMIN'],
-            ['usuario'=>'super',    'nombre'=>'Supervisor',         'email'=>null, 'pass'=>'Super.2026!',   'rol'=>'SUPERVISOR'],
-            ['usuario'=>'foto',     'nombre'=>'Estación Foto',      'email'=>null, 'pass'=>'Foto.2026!',    'rol'=>'EST_FOTO'],
-            ['usuario'=>'firma',    'nombre'=>'Estación Firma',     'email'=>null, 'pass'=>'Firma.2026!',   'rol'=>'EST_FIRMA'],
-            ['usuario'=>'huella',   'nombre'=>'Estación Huella',    'email'=>null, 'pass'=>'Huella.2026!',  'rol'=>'EST_HUELLA'],
-            ['usuario'=>'imprimir', 'nombre'=>'Estación Impresión', 'email'=>null, 'pass'=>'Imprime.2026!', 'rol'=>'EST_IMPRIME'],
+            ['usuario'=>'admin',    'nombre'=>'Administrador',      'email'=>null, 'pass'=>$adminPassword,   'rol'=>'ADMIN'],
+            ['usuario'=>'super',    'nombre'=>'Supervisor',         'email'=>null, 'pass'=>$defaultPassword, 'rol'=>'SUPERVISOR'],
+            ['usuario'=>'foto',     'nombre'=>'Estación Foto',      'email'=>null, 'pass'=>$defaultPassword, 'rol'=>'EST_FOTO'],
+            ['usuario'=>'firma',    'nombre'=>'Estación Firma',     'email'=>null, 'pass'=>$defaultPassword, 'rol'=>'EST_FIRMA'],
+            ['usuario'=>'huella',   'nombre'=>'Estación Huella',    'email'=>null, 'pass'=>$defaultPassword, 'rol'=>'EST_HUELLA'],
+            ['usuario'=>'imprimir', 'nombre'=>'Estación Impresión', 'email'=>null, 'pass'=>$defaultPassword, 'rol'=>'EST_IMPRIME'],
         ];
 
         foreach ($users as $u) {
