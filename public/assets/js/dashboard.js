@@ -105,9 +105,19 @@
 
     const updateKpis = (kpis) => {
       if (!kpis) return;
-      if (kpiTotalAlumnos) kpiTotalAlumnos.textContent = String(kpis.total_alumnos ?? 0);
-      if (kpiTurnosActivos) kpiTurnosActivos.textContent = String(kpis.turnos_activos ?? 0);
-      if (kpiPendientes) kpiPendientes.textContent = String(kpis.pendientes_biometricos ?? 0);
+      const mapping = {
+        'kpiTotalAlumnos': kpis.total_alumnos,
+        'kpiTurnosHoy': kpis.turnos_hoy,
+        'kpiCompletadosHoy': kpis.completados_hoy,
+        'kpiFotosHoy': kpis.fotos_hoy,
+        'kpiFirmasHoy': kpis.firmas_hoy,
+        'kpiHuellasHoy': kpis.huellas_hoy
+      };
+
+      Object.entries(mapping).forEach(([id, value]) => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = String(value ?? 0);
+      });
     };
 
     const debounce = (fn, wait) => {

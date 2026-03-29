@@ -52,28 +52,48 @@ class DashboardModel extends Model
 
     public function getKpis(): array
     {
+        $todayStart = date('Y-m-d 00:00:00');
+        $todayEnd   = date('Y-m-d 23:59:59');
+
         $totalAlumnos = $this->db->table('alumnos')->countAllResults();
 
-        $turnosActivos = $this->db->table('turnos')
-            ->where('es_activo', 1)
-            ->where('fecha_expira >=', date('Y-m-d H:i:s'))
+        $turnosHoy = $this->db->table('turnos')
+            ->where('created_at >=', $todayStart)
+            ->where('created_at <=', $todayEnd)
             ->countAllResults();
 
-        $pendientesBiometricos = $this->db->table('turnos t')
-            ->join('alumnos a', 'a.id_alumno = t.alumno_id', 'inner')
-            ->where('t.es_activo', 1)
-            ->where('t.fecha_expira >=', date('Y-m-d H:i:s'))
-            ->groupStart()
-                ->where('a.foto_archivo_id', null)
-                ->orWhere('a.firma_archivo_id', null)
-                ->orWhere('a.huella_archivo_id', null)
-            ->groupEnd()
+        $fotosHoy = $this->db->table('archivos')
+            ->where('tipo', 'foto')
+            ->where('created_at >=', $todayStart)
+            ->where('created_at <=', $todayEnd)
+            ->countAllResults();
+
+        $firmasHoy = $this->db->table('archivos')
+            ->where('tipo', 'firma')
+            ->where('created_at >=', $todayStart)
+            ->where('created_at <=', $todayEnd)
+            ->countAllResults();
+
+        $huellasHoy = $this->db->table('archivos')
+            ->where('tipo', 'huella')
+            ->where('created_at >=', $todayStart)
+            ->where('created_at <=', $todayEnd)
+            ->countAllResults();
+
+        // Trámites completados hoy (aquellos que pasaron a la etapa FINALIZADO o COMPLETADO hoy)
+        $completadosHoy = $this->db->table('turno_eventos')
+            ->where('tipo_evento', 'huella_guardada') // Asumiendo que huella es el último paso
+            ->where('created_at >=', $todayStart)
+            ->where('created_at <=', $todayEnd)
             ->countAllResults();
 
         return [
-            'total_alumnos'          => $totalAlumnos,
-            'turnos_activos'         => $turnosActivos,
-            'pendientes_biometricos' => $pendientesBiometricos,
+            'total_alumnos'   => $totalAlumnos,
+            'turnos_hoy'      => $turnosHoy,
+            'fotos_hoy'       => $fotosHoy,
+            'firmas_hoy'      => $firmasHoy,
+            'huellas_hoy'     => $huellasHoy,
+            'completados_hoy' => $completadosHoy,
         ];
     }
 

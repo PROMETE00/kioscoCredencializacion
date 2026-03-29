@@ -19,21 +19,36 @@
     <div class="d-subhint">La tabla se actualiza automáticamente al escribir. Se cargan 8 alumnos por consulta para mantenerla ligera.</div>
   </div>
 
-  <div class="d-kpi-grid">
+  <div class="d-kpi-grid" style="grid-template-columns: repeat(3, 1fr); gap: 1rem;">
     <div class="d-kpi is-active">
       <div class="d-kpi__label">Alumnos</div>
       <div class="d-kpi__value" id="kpiTotalAlumnos"><?= esc((string) ($kpis['total_alumnos'] ?? 0)) ?></div>
-      <div class="d-kpi__sub">Registros en base de datos</div>
+      <div class="d-kpi__sub">Registros en BD</div>
     </div>
     <div class="d-kpi is-active">
-      <div class="d-kpi__label">Turnos activos</div>
-      <div class="d-kpi__value" id="kpiTurnosActivos"><?= esc((string) ($kpis['turnos_activos'] ?? 0)) ?></div>
-      <div class="d-kpi__sub">Con turno vigente</div>
+      <div class="d-kpi__label">Turnos Hoy</div>
+      <div class="d-kpi__value" id="kpiTurnosHoy"><?= esc((string) ($kpis['turnos_hoy'] ?? 0)) ?></div>
+      <div class="d-kpi__sub">Generados hoy</div>
     </div>
-    <div class="d-kpi is-active">
-      <div class="d-kpi__label">Pendientes biométricos</div>
-      <div class="d-kpi__value" id="kpiPendientes"><?= esc((string) ($kpis['pendientes_biometricos'] ?? 0)) ?></div>
-      <div class="d-kpi__sub">Foto, firma o huella faltante</div>
+    <div class="d-kpi is-active" style="background-color: #ecfdf5; border-color: #10b981;">
+      <div class="d-kpi__label" style="color: #065f46;">Completados Hoy</div>
+      <div class="d-kpi__value" id="kpiCompletadosHoy" style="color: #047857;"><?= esc((string) ($kpis['completados_hoy'] ?? 0)) ?></div>
+      <div class="d-kpi__sub" style="color: #065f46;">Trámites finalizados</div>
+    </div>
+    <div class="d-kpi">
+      <div class="d-kpi__label">Fotos Hoy</div>
+      <div class="d-kpi__value" id="kpiFotosHoy"><?= esc((string) ($kpis['fotos_hoy'] ?? 0)) ?></div>
+      <div class="d-kpi__sub">Capturadas hoy</div>
+    </div>
+    <div class="d-kpi">
+      <div class="d-kpi__label">Firmas Hoy</div>
+      <div class="d-kpi__value" id="kpiFirmasHoy"><?= esc((string) ($kpis['firmas_hoy'] ?? 0)) ?></div>
+      <div class="d-kpi__sub">Capturadas hoy</div>
+    </div>
+    <div class="d-kpi">
+      <div class="d-kpi__label">Huellas Hoy</div>
+      <div class="d-kpi__value" id="kpiHuellasHoy"><?= esc((string) ($kpis['huellas_hoy'] ?? 0)) ?></div>
+      <div class="d-kpi__sub">Capturadas hoy</div>
     </div>
   </div>
 </div>
