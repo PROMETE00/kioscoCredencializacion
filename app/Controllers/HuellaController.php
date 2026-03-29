@@ -3,6 +3,7 @@
 namespace App\Controllers;
 
 use App\Models\HuellaModel;
+use RuntimeException;
 
 class HuellaController extends BaseController
 {
@@ -67,34 +68,46 @@ class HuellaController extends BaseController
     }
 
     /**
-     * Guardar huella (plantilla/base64/archivo/etc.).
-     * Por ahora solo valida que venga alumnoId/turnoId, y deja el hook para tu implementación real.
+     * Guardar huella (imagen base64).
      */
     public function guardar()
     {
         $model = new HuellaModel();
 
-        $alumnoId = (int)($this->request->getPost('alumnoId') ?? 0);
-        $turnoId  = (int)($this->request->getPost('turnoId') ?? 0);
+        $alumnoId = (int)($this->request->getPost('alumno_id') ?? 0);
+        $turnoId  = (int)($this->request->getPost('turno_id') ?? 0);
+        $huellaB64 = (string)($this->request->getPost('huella_b64') ?? '');
 
-        // Puede venir template/imagen desde tu servicio/SDK:
-        $template = (string)($this->request->getPost('template') ?? '');
-        $imageB64 = (string)($this->request->getPost('image') ?? '');
-
-        if ($alumnoId <= 0 && $turnoId <= 0) {
+        if ($alumnoId <= 0 || $turnoId <= 0) {
             return $this->response->setStatusCode(400)->setJSON([
-                'ok'  => false,
-                'msg' => 'Falta alumnoId o turnoId',
+                'ok'      => false,
+                'message' => 'Falta alumno_id o turno_id.',
             ]);
         }
 
-        // TODO: aquí llamarías a $model->saveHuella(...)
-        // Ejemplo:
-        // $ok = $model->saveHuella($alumnoId, $turnoId, $template, $imageB64);
+        if ($huellaB64 === '' || !str_starts_with($huellaB64, 'data:image/')) {
+            return $this->response->setStatusCode(400)->setJSON([
+                'ok'      => false,
+                'message' => 'La huella recibida no es válida.',
+            ]);
+        }
+
+        try {
+            $resultado = $model->saveHuella($alumnoId, $turnoId, $huellaB64);
+        } catch (RuntimeException $e) {
+            return $this->response->setStatusCode(400)->setJSON([
+                'ok'      => false,
+                'message' => $e->getMessage(),
+            ]);
+        }
 
         return $this->response->setJSON([
-            'ok'  => true,
-            'msg' => 'Guardado pendiente de integrar con lector/SDK',
+            'ok'       => true,
+            'message'  => 'Huella guardada correctamente.',
+            'url'      => $resultado['url'],
+            'archivoId'=> $resultado['archivo_id'],
+            'queue'    => $model->getQueue(),
+            'current'  => $model->getNextPending(),
         ]);
     }
 }
