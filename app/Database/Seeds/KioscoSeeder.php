@@ -8,71 +8,74 @@ class KioscoSeeder extends Seeder
 {
     public function run()
     {
-        // 1. Catálogo de Etapas
-        $etapas = [
-            ['codigo' => 'TURNO_GENERADO', 'nombre' => 'Turno Generado'],
-            ['codigo' => 'FOTO_CAPTURADA', 'nombre' => 'Fotografía Capturada'],
-            ['codigo' => 'FIRMA_REGISTRADA', 'nombre' => 'Firma Registrada'],
-            ['codigo' => 'HUELLA_CAPTURADA', 'nombre' => 'Huella Capturada'],
-            ['codigo' => 'COMPLETADO',       'nombre' => 'Trámite Completado'],
+        // 1. Catálogo de Etapas (Stages)
+        $stages = [
+            ['code' => 'TICKET_GENERATED',   'name' => 'Turno Generado'],
+            ['code' => 'PHOTO_CAPTURED',     'name' => 'Fotografía Capturada'],
+            ['code' => 'SIGNATURE_CAPTURED', 'name' => 'Firma Registrada'],
+            ['code' => 'FINGER_CAPTURED',    'name' => 'Huella Capturada'],
+            ['code' => 'COMPLETED',          'name' => 'Trámite Completado'],
         ];
 
-        foreach ($etapas as $e) {
-            $exists = $this->db->table('cat_etapas')->where('codigo', $e['codigo'])->get()->getRowArray();
+        foreach ($stages as $e) {
+            $exists = $this->db->table('cat_stages')->where('code', $e['code'])->get()->getRowArray();
             if (!$exists) {
                 $e['created_at'] = date('Y-m-d H:i:s');
-                $this->db->table('cat_etapas')->insert($e);
+                $this->db->table('cat_stages')->insert($e);
             }
         }
 
-        // 2. Catálogo de Estatus
-        $estatus = [
-            ['codigo' => 'EN_ESPERA', 'nombre' => 'En Espera'],
-            ['codigo' => 'EN_PROCESO', 'nombre' => 'En Proceso'],
-            ['codigo' => 'FINALIZADO', 'nombre' => 'Finalizado'],
-            ['codigo' => 'CANCELADO',  'nombre' => 'Cancelado'],
+        // 2. Catálogo de Estatus (Status)
+        $statuses = [
+            ['code' => 'WAITING',   'name' => 'En Espera'],
+            ['code' => 'IN_PROCESS','name' => 'En Proceso'],
+            ['code' => 'FINISHED',  'name' => 'Finalizado'],
+            ['code' => 'CANCELED',  'name' => 'Cancelado'],
         ];
 
-        foreach ($estatus as $s) {
-            $exists = $this->db->table('cat_estatus_turno')->where('codigo', $s['codigo'])->get()->getRowArray();
+        foreach ($statuses as $s) {
+            $exists = $this->db->table('cat_ticket_status')->where('code', $s['code'])->get()->getRowArray();
             if (!$exists) {
                 $s['created_at'] = date('Y-m-d H:i:s');
-                $this->db->table('cat_estatus_turno')->insert($s);
+                $this->db->table('cat_ticket_status')->insert($s);
             }
         }
 
-        // 3. Datos de prueba: Alumnos y Turnos
-        $alumnos = [
+        // 3. Datos de prueba: Alumnos y Turnos (Students and Tickets)
+        $students = [
             [
-                'numero_control'  => '20160001',
-                'nombre_completo' => 'JUAN PEREZ LOPEZ',
-                'carrera_nombre'  => 'INGENIERIA EN SISTEMAS COMPUTACIONALES',
+                'control_number' => '20160001',
+                'full_name'      => 'JUAN PEREZ LOPEZ',
+                'career_name'    => 'INGENIERIA EN SISTEMAS COMPUTACIONALES',
             ],
             [
-                'numero_control'  => '20160002',
-                'nombre_completo' => 'MARIA GARCIA HERNANDEZ',
-                'carrera_nombre'  => 'INGENIERIA INDUSTRIAL',
+                'control_number' => '20160002',
+                'full_name'      => 'MARIA GARCIA HERNANDEZ',
+                'career_name'    => 'INGENIERIA INDUSTRIAL',
             ],
         ];
 
-        $etapaTurnoId = $this->db->table('cat_etapas')->where('codigo', 'TURNO_GENERADO')->get()->getRowArray()['id_etapa'];
-        $estatusEsperaId = $this->db->table('cat_estatus_turno')->where('codigo', 'EN_ESPERA')->get()->getRowArray()['id_estatus'];
+        $stageRow = $this->db->table('cat_stages')->where('code', 'TICKET_GENERATED')->get()->getRowArray();
+        $stageId = $stageRow ? $stageRow['id_stage'] : null;
 
-        foreach ($alumnos as $a) {
-            $exists = $this->db->table('alumnos')->where('numero_control', $a['numero_control'])->get()->getRowArray();
+        $statusRow = $this->db->table('cat_ticket_status')->where('code', 'WAITING')->get()->getRowArray();
+        $statusId = $statusRow ? $statusRow['id_status'] : null;
+
+        foreach ($students as $a) {
+            $exists = $this->db->table('students')->where('control_number', $a['control_number'])->get()->getRowArray();
             if (!$exists) {
                 $a['created_at'] = date('Y-m-d H:i:s');
-                $this->db->table('alumnos')->insert($a);
-                $alumnoId = $this->db->insertID();
+                $this->db->table('students')->insert($a);
+                $studentId = $this->db->insertID();
 
-                // Generar un turno para este alumno
-                $this->db->table('turnos')->insert([
-                    'alumno_id'        => $alumnoId,
-                    'folio'            => 'T-' . str_pad($alumnoId, 4, '0', STR_PAD_LEFT),
-                    'etapa_actual_id'  => $etapaTurnoId,
-                    'estatus_turno_id' => $estatusEsperaId,
-                    'es_activo'        => 1,
-                    'fecha_expira'     => date('Y-m-d 23:59:59'),
+                // Generate ticket for this student
+                $this->db->table('tickets')->insert([
+                    'student_id'       => $studentId,
+                    'folio'            => 'T-' . str_pad($studentId, 4, '0', STR_PAD_LEFT),
+                    'current_stage_id' => $stageId,
+                    'ticket_status_id' => $statusId,
+                    'is_active'        => 1,
+                    'expires_at'       => date('Y-m-d 23:59:59'),
                     'created_at'       => date('Y-m-d H:i:s'),
                 ]);
             }

@@ -1,48 +1,56 @@
 <?php
 
-namespace App\Controllers;
+namespace App\Modules\Stations\Controllers;
 
-use CodeIgniter\Controller;
-use App\Models\CaptureQueueModel;
+use App\Controllers\BaseController;
+use App\Modules\Stations\Models\CaptureQueueModel;
 use RuntimeException;
 
-class CameraController extends Controller
+/**
+ * Controller for handling photo captures at the station.
+ */
+class CameraController extends BaseController
 {
     public function index()
     {
-        $m = new CaptureQueueModel();
+        $model = new CaptureQueueModel();
 
         $selectedId = $this->request->getGet('id');
         $selectedId = $selectedId ? (int)$selectedId : null;
 
-        $queue   = $m->getQueue();
-        $current = $m->getCurrent($selectedId);
+        $queue   = $model->getQueue();
+        $current = $model->getCurrent($selectedId);
 
         return view('camera/capture_queue', [
             'title'      => 'Captura de fotografía',
-            'activeMenu' => 'credenciales',
+            'activeMenu' => 'fotografia',
             'queue'      => $queue,
             'current'    => $current,
         ]);
     }
 
-    // opcional: refrescar cola via AJAX
+    /**
+     * Refresca la cola de captura vía AJAX.
+     */
     public function queue()
     {
-        $m = new CaptureQueueModel();
+        $model = new CaptureQueueModel();
         return $this->response->setJSON([
             'ok'    => true,
-            'queue' => $m->getQueue(),
+            'queue' => $model->getQueue(),
         ]);
     }
 
+    /**
+     * Guarda la fotografía capturada.
+     */
     public function save()
     {
         $dataUrl   = $this->request->getPost('image');
         $studentId = (int) $this->request->getPost('student_id');
-        $turnoId   = (int) $this->request->getPost('turno_id');
+        $ticketId  = (int) $this->request->getPost('turno_id');
 
-        if (!$studentId || !$turnoId) {
+        if (!$studentId || !$ticketId) {
             return $this->response->setStatusCode(400)->setJSON([
                 'ok' => false, 'msg' => 'Falta student_id o turno_id'
             ]);
@@ -64,9 +72,9 @@ class CameraController extends Controller
         $content = $matches[2];
 
         $ext = match ($mime) {
-            'image/png' => 'png',
+            'image/png'  => 'png',
             'image/webp' => 'webp',
-            default => 'jpg',
+            default      => 'jpg',
         };
 
         $binary = base64_decode($content, true);
@@ -79,7 +87,7 @@ class CameraController extends Controller
         $dir = FCPATH . 'uploads/photos/';
         if (!is_dir($dir)) mkdir($dir, 0775, true);
 
-        $filename = "foto_{$studentId}_" . date('Ymd_His') . '_' . bin2hex(random_bytes(3)) . '.' . $ext;
+        $filename = "photo_{$studentId}_" . date('Ymd_His') . '_' . bin2hex(random_bytes(3)) . '.' . $ext;
         $path = $dir . $filename;
 
         if (file_put_contents($path, $binary) === false) {
@@ -88,11 +96,11 @@ class CameraController extends Controller
             ]);
         }
 
-        $m = new CaptureQueueModel();
+        $model = new CaptureQueueModel();
         try {
-            $m->markCaptured(
+            $model->markCaptured(
                 $studentId,
-                $turnoId,
+                $ticketId,
                 'uploads/photos/' . $filename,
                 $mime,
                 filesize($path) ?: 0,
@@ -109,8 +117,8 @@ class CameraController extends Controller
             'ok'       => true,
             'filename' => $filename,
             'url'      => base_url('uploads/photos/' . $filename),
-            'queue'    => $m->getQueue(),
-            'current'  => $m->getCurrent(),
+            'queue'    => $model->getQueue(),
+            'current'  => $model->getCurrent(),
         ]);
     }
 }

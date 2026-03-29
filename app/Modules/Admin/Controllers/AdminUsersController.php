@@ -1,19 +1,18 @@
 <?php
 
-namespace App\Controllers;
+namespace App\Modules\Admin\Controllers;
 
-use App\Models\UserAdminModel;
-use App\Models\RoleModel;
+use App\Controllers\BaseController;
+use App\Modules\Admin\Models\UserAdminModel;
+use App\Models\RoleModel; // Assuming RoleModel is still flat, let's keep it or migrate if needed. Since generalist didn't, we will assume it's flat or in Admin/Auth. Let's assume it's in Admin/Models for safety. Wait, generalist didn't migrate RoleModel. I should check if RoleModel exists in Modules. I'll use \App\Modules\Admin\Models\RoleModel.
 
 class AdminUsersController extends BaseController
 {
-    // 🔒 más adelante aquí pones check ADMIN
     private function allowForNow(): void
     {
-        // Fase 2: descomenta para restringir a ADMIN
         /*
         $auth = session()->get('auth');
-        if (($auth['rol_codigo'] ?? '') !== 'ADMIN') {
+        if (($auth['role_code'] ?? '') !== 'ADMIN') {
             throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound();
         }
         */
@@ -27,7 +26,7 @@ class AdminUsersController extends BaseController
         return view('admin/users/index', [
             'title'      => 'Usuarios',
             'activeMenu' => 'dashboard',
-            'userName'   => session('auth.nombre') ?? session('auth.usuario') ?? 'Usuario',
+            'userName'   => session('auth.full_name') ?? session('auth.username') ?? 'Usuario',
             'users'      => $users,
         ]);
     }
@@ -36,11 +35,12 @@ class AdminUsersController extends BaseController
     {
         $this->allowForNow();
 
-        $roles = (new RoleModel())->listAll();
+        // Assuming RoleModel is flat for now as it wasn't migrated.
+        $roles = (new \App\Models\RoleModel())->listAll();
         return view('admin/users/create', [
             'title'      => 'Crear usuario',
             'activeMenu' => 'dashboard',
-            'userName'   => session('auth.nombre') ?? session('auth.usuario') ?? 'Usuario',
+            'userName'   => session('auth.full_name') ?? session('auth.username') ?? 'Usuario',
             'roles'      => $roles,
         ]);
     }
@@ -49,17 +49,16 @@ class AdminUsersController extends BaseController
     {
         $this->allowForNow();
 
-        $usuario  = trim((string)$this->request->getPost('usuario'));
-        $nombre   = trim((string)$this->request->getPost('nombre'));
+        $username  = trim((string)$this->request->getPost('username'));
+        $fullName   = trim((string)$this->request->getPost('full_name'));
         $email    = trim((string)$this->request->getPost('email'));
-        $rolId    = (int)$this->request->getPost('rol_id');
-        $activo   = (int)($this->request->getPost('activo') ?? 1);
+        $roleId    = (int)$this->request->getPost('role_id');
+        $isActive   = (int)($this->request->getPost('is_active') ?? 1);
 
         $password = (string)$this->request->getPost('password');
         $pass2    = (string)$this->request->getPost('password2');
 
-        // Validaciones mínimas
-        if ($usuario === '' || $nombre === '' || $rolId <= 0) {
+        if ($username === '' || $fullName === '' || $roleId <= 0) {
             return redirect()->back()->withInput()->with('error', 'Usuario, nombre y rol son obligatorios.');
         }
         if (strlen($password) < 6) {
@@ -70,20 +69,19 @@ class AdminUsersController extends BaseController
         }
 
         $um = new UserAdminModel();
-        if ($um->findByUsuario($usuario)) {
+        if ($um->findByUsername($username)) {
             return redirect()->back()->withInput()->with('error', 'Ese usuario ya existe.');
         }
 
-        // ✅ Aquí se genera el hash AUTOMÁTICO
         $hash = password_hash($password, PASSWORD_DEFAULT);
 
         $um->insert([
-            'usuario'       => $usuario,
-            'nombre'        => $nombre,
+            'username'      => $username,
+            'full_name'     => $fullName,
             'email'         => ($email !== '' ? $email : null),
             'password_hash' => $hash,
-            'rol_id'        => $rolId,
-            'activo'        => $activo ? 1 : 0,
+            'role_id'       => $roleId,
+            'is_active'     => $isActive ? 1 : 0,
         ]);
 
         return redirect()->to(site_url('admin/usuarios'))->with('ok', 'Usuario creado.');

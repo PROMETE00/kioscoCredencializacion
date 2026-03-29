@@ -25,9 +25,9 @@
     </div>
 <?php $auth = session()->get('auth') ?? []; ?>
 <?php
-  $userName  = $auth['nombre'] ?? ($auth['usuario'] ?? 'Usuario');
-  $rolCodigo = $auth['rol_codigo'] ?? null;   // si aún no lo guardas, abajo te doy fallback
-  $isAdmin   = ($rolCodigo === 'ADMIN') || (($auth['rol_id'] ?? 0) == 1); // fallback temporal
+  $userName  = $auth['full_name'] ?? ($auth['username'] ?? 'Usuario');
+  $rolCodigo = $auth['role_code'] ?? null;   // si aún no lo guardas, abajo te doy fallback
+  $isAdmin   = ($rolCodigo === 'ADMIN') || (($auth['role_id'] ?? 0) == 1); // fallback temporal
 ?>
 
 <div class="d-header__right">

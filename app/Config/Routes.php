@@ -6,64 +6,58 @@ use CodeIgniter\Router\RouteCollection;
  * @var RouteCollection $routes
  */
 
-/* =======================
-   PÚBLICO (ALUMNOS)
-   ======================= */
-$routes->get('/', 'Publico\TurnoPublicController::nuevo');
-$routes->get('turno', 'Publico\TurnoPublicController::nuevo');
-$routes->get('turnos/general', 'Publico\TurnoPublicController::general');
-$routes->post('turno/buscar', 'Publico\TurnoPublicController::buscarAlumno');
-$routes->post('turno/generar', 'Publico\TurnoPublicController::generarTurno');
-$routes->get('turno/pdf/(:segment)', 'Publico\TurnoPublicController::descargarPdf/$1');
-$routes->get('turno/seguimiento/(:segment)', 'Publico\TurnoPublicController::estadoJson/$1');
-$routes->get('t/(:segment)', 'Publico\TurnoPublicController::estado/$1');
+// 1. PUBLIC PORTAL (Turnos)
+$routes->group('', ['namespace' => 'App\Modules\PublicPortal\Controllers'], static function ($routes) {
+    $routes->get('/', 'TicketController::index');
+    $routes->get('turno', 'TicketController::index');
+    $routes->post('turno/buscar', 'TicketController::searchStudent');
+    $routes->post('turno/generar', 'TicketController::generate');
 
-/* =======================
-   ADMIN: LOGIN / LOGOUT
-   ======================= */
-//  agrega un GET para mostrar el formulario de login admin
-$routes->get('admin/login', 'AuthController::login');
-$routes->post('admin/login', 'AuthController::attempt');
-$routes->get('admin/logout', 'AuthController::logout');
+    $routes->get('t/(:segment)', 'TicketController::status/$1');
+    $routes->get('t/(:segment)/json', 'TicketController::statusJson/$1');
+    $routes->get('turno/pdf/(:segment)', 'TicketController::downloadPdf/$1');
+});
 
-// (opcional) compatibilidad con tu POST viejo
-$routes->post('login', 'AuthController::attempt');
-$routes->get('logout', 'AuthController::logout');
+// 2. AUTHENTICATION
+$routes->group('', ['namespace' => 'App\Modules\Auth\Controllers'], static function ($routes) {
+    $routes->get('login', 'LoginController::index');
+    $routes->post('login', 'LoginController::login');
+    $routes->get('logout', 'LoginController::logout');
+});
 
-/* =======================
-   PROTEGIDO: TODO el sistema
-   ======================= */
-$routes->group('', ['filter' => 'auth'], function($routes) {
-
-   // Dashboard
-   $routes->get('admin', 'DashboardController::index');
-   $routes->get('admin/dashboard', 'DashboardController::index');
-   $routes->get('admin/dashboard/alumnos', 'DashboardController::alumnos');
-   $routes->post('admin/dashboard/estatus', 'DashboardController::cambiarEstatus');
-   $routes->post('admin/dashboard/biometrico/eliminar', 'DashboardController::borrarBiometrico');
-
-    // Usuarios (admin panel)
-   $routes->get('admin/usuarios', 'AdminUsersController::index');
-   $routes->get('admin/usuarios/create', 'AdminUsersController::create');
-   $routes->post('admin/usuarios', 'AdminUsersController::store');
-
-    // Foto
-   $routes->get('captura', 'CameraController::index');
-   $routes->post('captura/guardar', 'CameraController::save');
+// 3. CAPTURE STATIONS (Protected by AuthFilter)
+$routes->group('captura', ['namespace' => 'App\Modules\Stations\Controllers', 'filter' => 'auth'], static function ($routes) {
+    
+    // Fotografía
+    $routes->get('foto', 'CameraController::index');
+    $routes->get('foto/(:num)', 'CameraController::index/$1');
+    $routes->get('foto/cola', 'CameraController::queue');
+    $routes->post('foto/guardar', 'CameraController::save');
 
     // Firma
-    $routes->get('captura/firma', 'FirmaController::index');
-    $routes->get('captura/firma/(:num)', 'FirmaController::index/$1');
-    $routes->get('captura/firma/cola', 'FirmaController::cola');
-    $routes->get('captura/firma/alumno', 'FirmaController::alumno');
-    $routes->post('captura/firma/guardar', 'FirmaController::guardar');
+    $routes->get('firma', 'FirmaController::index');
+    $routes->get('firma/(:num)', 'FirmaController::index/$1');
+    $routes->get('firma/cola', 'FirmaController::cola');
+    $routes->get('firma/alumno', 'FirmaController::alumno');
+    $routes->post('firma/guardar', 'FirmaController::guardar');
 
     // Huella
-   $routes->get('captura/huella', 'HuellaController::index');
-   $routes->get('captura/huella/(:num)', 'HuellaController::index/$1');
-   $routes->get('captura/huella/cola', 'HuellaController::cola');
-   $routes->get('captura/huella/alumno', 'HuellaController::alumno');
-   $routes->post('captura/huella/guardar', 'HuellaController::guardar');
+    $routes->get('huella', 'HuellaController::index');
+    $routes->get('huella/(:num)', 'HuellaController::index/$1');
+    $routes->get('huella/cola', 'HuellaController::cola');
+    $routes->get('huella/alumno', 'HuellaController::alumno');
+    $routes->post('huella/guardar', 'HuellaController::guardar');
+});
 
-   $routes->get('debug/db', 'DebugController::db');
+// 4. ADMIN DASHBOARD (Protected by AuthFilter)
+$routes->group('admin', ['namespace' => 'App\Modules\Admin\Controllers', 'filter' => 'auth'], static function ($routes) {
+    $routes->get('dashboard', 'DashboardController::index');
+    $routes->get('dashboard/alumnos', 'DashboardController::students');
+    $routes->post('dashboard/estatus', 'DashboardController::changeStatus');
+    $routes->post('dashboard/biometrico/eliminar', 'DashboardController::clearBiometric');
+
+    // Usuarios
+    $routes->get('usuarios', 'AdminUsersController::index');
+    $routes->get('usuarios/create', 'AdminUsersController::create');
+    $routes->post('usuarios', 'AdminUsersController::store');
 });
