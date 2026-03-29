@@ -133,8 +133,8 @@ class FirmaModel extends Model
             ->get()
             ->getRowArray();
 
-        $nuevaEtapaId = $this->findEtapaId(['firma_registrada', 'FIRMA']);
-        $nuevoEstatusId = $this->findEstatusId(['activo', 'EN_PROCESO']);
+        $nuevaEtapaId = $this->findEtapaId(['FIRMA_REGISTRADA', 'firma_registrada', 'FIRMA']);
+        $nuevoEstatusId = $this->findEstatusId(['EN_PROCESO', 'activo']);
 
         $turnoUpdate = ['updated_at' => $ahora];
         if ($nuevaEtapaId !== null) {

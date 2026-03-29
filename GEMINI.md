@@ -16,13 +16,15 @@ El sistema facilita el trámite de credenciales universitarias mediante un flujo
 -   **Gestión de Dependencias:** Composer.
 
 ## 📂 Estructura del Proyecto (Estado Actual)
--   `app/Controllers/`: Lógica de flujo (mezcla inglés/español).
--   `app/Models/`: Acceso a datos (algunos son placeholders como `FirmaModel` y `HuellaModel`).
+-   `app/Controllers/`: Lógica de flujo (incluye `FirmaController` funcional).
+-   `app/Models/`: Acceso a datos (`FirmaModel` ahora es funcional con DB).
+-   `app/Database/Migrations/`: Migración inicial `20260328000001_CreateKioscoTables.php` que define el esquema completo.
+-   `app/Database/Seeds/`: `KioscoSeeder.php` para poblar catálogos y datos de prueba.
 -   `app/Views/`: Plantillas divididas en `admin`, `auth`, `camera`, `captura`, `public`.
 -   `public/uploads/`: Almacenamiento de biometría (`photos/`, `firmas/`).
 
 ## 🚀 Plan de Reestructuración (Objetivos)
-Se busca migrar hacia una arquitectura **HMVC (Hierarchical MVC)** más modular y escalable:
+-   **Módulo de Firma:** Completamente funcional. Captura desde Canvas, guarda imagen física y registra en DB con historial de eventos.
 -   **Modularización:** Mover la lógica a `app/Modules/` (e.g., `TurnoPublico`, `Auth`, `EstacionFoto`).
 -   **Capas:** Implementar **Servicios** para lógica de negocio y **Repositorios** para persistencia, manteniendo controladores "delgados".
 -   **API-First:** Preparar el sistema para ser consumido por apps móviles o nuevos clientes.
