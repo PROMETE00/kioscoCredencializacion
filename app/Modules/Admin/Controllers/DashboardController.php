@@ -51,7 +51,7 @@ class DashboardController extends BaseController
         $model = new DashboardModel();
 
         try {
-            $row = $model->updateTurnStatus($ticketId, $statusId);
+            $row = $model->updateTicketStatus($ticketId, $statusId);
         } catch (RuntimeException $e) {
             return $this->response->setStatusCode(400)->setJSON([
                 'ok'      => false,

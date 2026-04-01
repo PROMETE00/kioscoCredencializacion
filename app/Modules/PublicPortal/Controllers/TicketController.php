@@ -94,6 +94,16 @@ class TicketController extends BaseController
      */
     public function generateTicket()
     {
+        // Rate limiting básico (prevenir doble clic o spam automatizado)
+        $lastRequest = session()->get('last_ticket_request_time') ?? 0;
+        if (time() - $lastRequest < 3) {
+            return view($this->viewBase . '/generar_turno', array_merge(
+                $this->baseViewData(),
+                ['error' => 'Por favor, espera unos segundos antes de intentar nuevamente.']
+            ));
+        }
+        session()->set('last_ticket_request_time', time());
+
         $identifier = trim((string) $this->request->getPost('identificador'));
 
         $rules = [
@@ -462,6 +472,11 @@ class TicketController extends BaseController
             'pdf_url'                => $ticket['pdf_url'] ?? null,
             'qr_url'                 => $ticket['qr_url'] ?? null,
             'seguimiento_url'        => $ticket['tracking_url'] ?? null,
+            'mensaje_progreso'       => $ticket['progress_message'] ?? null,
+            'eta_texto'              => $ticket['eta_text'] ?? null,
+            'turnos_antes'           => $ticket['tickets_before'] ?? 0,
+            'turno_actual_folio'     => $ticket['current_ticket_folio'] ?? null,
+            'turno_actual_etapa'     => $ticket['current_ticket_stage'] ?? null,
         ]);
     }
 

@@ -17,8 +17,8 @@
   const alSemestre = $('alSemestre');
   const alEstatus  = $('alEstatus');
   const alStatus   = $('alStatus');
-  const alumnoIdEl = $('alumnoId');
-  const turnoIdEl  = $('turnoId');
+  const studentIdEl = $('studentId');
+  const ticketIdEl  = $('turnoId');
 
   // Elementos UI Captura (Panel Central)
   const fpStatus   = $('fpStatus');
@@ -34,7 +34,7 @@
   const queueCount = $('queueCount');
   const queueSearch= $('queueSearch');
 
-  let selectedTurnoId = Number(turnoIdEl?.value || 0);
+  let selectedTurnoId = Number(ticketIdEl?.value || 0);
   let colaData = [];
   let currentHuellaB64 = "";
 
@@ -79,19 +79,19 @@
     }
 
     queueList.innerHTML = list.map(a => `
-      <div class="d-queue-item ${Number(a.turno_id) === selectedTurnoId ? 'is-active' : ''}"
-           data-alumno-id="${a.alumno_id}"
-           data-turno-id="${a.turno_id}"
-           data-nombre="${escapeHtml(a.nombre)}"
-           data-control="${escapeHtml(a.no_control)}"
-           data-carrera="${escapeHtml(a.carrera)}"
-           data-estatus="${escapeHtml(a.estatus)}">
+      <div class="d-queue-item ${Number(a.ticket_id) === selectedTurnoId ? 'is-active' : ''}"
+           data-student-id="${a.student_id}"
+           data-ticket-id="${a.ticket_id}"
+           data-name="${escapeHtml(a.name)}"
+           data-control="${escapeHtml(a.control_number)}"
+           data-career="${escapeHtml(a.career)}"
+           data-status="${escapeHtml(a.status)}">
         <div class="d-queue-main">
-          <div class="d-queue-name">${escapeHtml(a.nombre)}</div>
-          <div class="d-queue-info">${escapeHtml(a.no_control)} · ${escapeHtml(a.carrera)}</div>
+          <div class="d-queue-name">${escapeHtml(a.name)}</div>
+          <div class="d-queue-info">${escapeHtml(a.control_number)} · ${escapeHtml(a.career)}</div>
         </div>
         <div class="d-queue-side">
-          <div class="d-queue-folio">${escapeHtml(a.turno)}</div>
+          <div class="d-queue-folio">${escapeHtml(a.ticket_folio)}</div>
           <div class="d-queue-label">Listo</div>
         </div>
       </div>
@@ -107,8 +107,8 @@
       
       const q = (queueSearch?.value || "").toLowerCase().trim();
       const filtered = !q ? colaData : colaData.filter(a =>
-        String(a.nombre).toLowerCase().includes(q) ||
-        String(a.no_control).toLowerCase().includes(q)
+        String(a.name).toLowerCase().includes(q) ||
+        String(a.control_number).toLowerCase().includes(q)
       );
       
       renderCola(filtered);
@@ -117,7 +117,7 @@
         applySelected(filtered[0]);
       } else if (selectedTurnoId) {
         // Asegurar que el elemento activo se mantenga
-        const stillInQueue = colaData.find(a => Number(a.turno_id) === selectedTurnoId);
+        const stillInQueue = colaData.find(a => Number(a.ticket_id) === selectedTurnoId);
         if (!stillInQueue && filtered.length > 0) {
             applySelected(filtered[0]);
         }
@@ -130,16 +130,16 @@
   function applySelected(data) {
     if (!data) return;
 
-    alumnoIdEl.value = data.alumno_id || data.id || "0";
-    turnoIdEl.value  = data.turno_id || "0";
+    studentIdEl.value = data.student_id || data.id || "0";
+    ticketIdEl.value  = data.ticket_id || "0";
 
-    if (alNombre) alNombre.textContent = data.nombre || "—";
-    if (alControl) alControl.textContent = data.no_control || "—";
-    if (alCarrera) alCarrera.textContent = data.carrera || "—";
-    if (alEstatus) alEstatus.textContent = data.estatus || "—";
+    if (alNombre) alNombre.textContent = data.name || "—";
+    if (alControl) alControl.textContent = data.control || "—";
+    if (alCarrera) alCarrera.textContent = data.career || "—";
+    if (alEstatus) alEstatus.textContent = data.status || "—";
     if (alStatus) alStatus.textContent = "Listo para capturar huella.";
 
-    selectedTurnoId = Number(data.turno_id || 0);
+    selectedTurnoId = Number(data.ticket_id || 0);
 
     clearPreview();
     currentHuellaB64 = "";
@@ -152,7 +152,7 @@
     // Marcar como activo en la lista visual
     document.querySelectorAll('.d-queue-item').forEach(el => {
       el.classList.remove('is-active');
-      if (Number(el.dataset.turnoId) === selectedTurnoId) el.classList.add('is-active');
+      if (Number(el.dataset.ticketId) === selectedTurnoId) el.classList.add('is-active');
     });
   }
 
@@ -165,8 +165,8 @@
   queueSearch?.addEventListener('input', () => {
     const q = queueSearch.value.toLowerCase().trim();
     const filtered = !q ? colaData : colaData.filter(a =>
-      String(a.nombre).toLowerCase().includes(q) ||
-      String(a.no_control).toLowerCase().includes(q)
+      String(a.name).toLowerCase().includes(q) ||
+      String(a.control_number).toLowerCase().includes(q)
     );
     renderCola(filtered);
   });
@@ -175,11 +175,9 @@
     setStatus("Capturando... coloca el dedo en el lector.");
     btnStart.disabled = true;
 
-    // SIMULACIÓN: En una implementación real, aquí llamarías al SDK del lector.
-    // Simulamos un retraso de captura.
+    // SIMULACIÓN
     setTimeout(() => {
-        // Imagen de huella genérica para la demo/simulación
-        currentHuellaB64 = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAYAAABw4pVUAAAACXBIWXMAAAsTAAALEwEAmpwYAAAFm0lEQVR4nO2dS2hcVRjHf+fOnZm8m8m0SdOkSdukSZqmSdO0SZpE6gNBpSii4EIQXbiI4K6IC0V0IbgpLhTRhYuCuFBXgguFuhNcKLoQXCiqG0V1o6huFNcNbS39mEyTyfS9587v4mI6L82bmZskd/7f7zCHe885k/v7/9/v3HO+M0FhGIYIggDP85AkCRH0Y7PZEAgC4rX7vHovSRLi6zRNiW9TkiTE9/0B+74/YN/3B+z7fnY9N7mOR9O0zHo0TUMQBCRJQvL/Bq0pTdPMeoZhaIbhyG/u3Xv33nOnp0/NzEznZmamF7Pzp6dnFm9N385Xvvn2h6Vbt1YWHnx88vS5s+d7XfH8+Z7evr7+8f6B/onBwcH80NDQQGFoaOjrwaGhU76P779yM1/55tsf763fvHX89NnzvefO9/R2v+879O9/H95/D99/5Xbu3vrt44NPmD9+5Z7f7OOfv3R+6Y03j584fOTU9InTp3unp0/NzU6fmtu8vX5/669f9r777ofljU8/vX/309WfV1Z+619ZfWvlj5+Xf/vldv+/799vO+S3P7YfDtt/2P7DdtghDtv/sh867LBDfOew7ZDH3L8B63nIfB4yn8fM5zHzecw8Zp7HzOOYOR4zx2PmeMx8Xj6PF8/jxfP4PJ4vj+fL4/ny+DxePI8Xz8fj8fF4fDweb6/H2+vx9nq8vR5vr8v7D9578On06bPne8f7B/pXvvn2h8Vbt1Y8p8P277X9u23/Xtt922vX+XfX9bp1vS9d76vS9X7v+z9S7773YfnMv9tIkoQ4Yf58T+8nn64+XN749FO7v+mQW+f7rvR93/8uej973u+9Y9f7unX99u31++/7DvvfRe+/0vshPv6/j0qf/3uNf358On367Pne8f6B/uefO3e+v7//C3zH29P38XfX8+3p+/nNfOf/XuN7X7euf/99fK+/i7/f9X7vff9H8f77v89Xv72+/+DBJ6ePHDk1e+709KlMhvT09X9vD8j+D5S97v9A2f8fDEnX9drf/Xdd1+vW9X+UrtftB69X58+fO3++r79/PDXkDv8P8p1PZcgY/w7z6fRp9A7yYfT677Kvx776ve7vsq/9n0Wv977v/S9G76fT6fR6vV6vV6vX2+v19np9Pp9Pp9Pr9fl8Pp9PJ/nPJ/mD16s8vSrvvXjvwYNPXnrpzaX88S97Th/790OHT5pPpk8fOfL6zOnTvZMTp+Yyb80vffv993u/fvnN/V7ff6V//6tO990fdf79UXf98Wnnf6Xzf8f96N/vV/73Xf973Xf/B/p+9v3v93796D98vTp8Pq9X7v0vX+/P6/25SrvvI1/vI1/vy+v9uR6v96Xp+uT9PnH/N16fH69P6vV6vV6v1+v1er1er9fr9Xq9Xq/X6/V6vV6v1+v1er1er9fr9Xq9Xq/X6/V6v1+v1er1er1er9fr9Xq9Xq/X6/V6vV6v1+v1er1er9fr9Xq9Xq/X6/V6vV6v1+v1er1er9fr9Xq9Xq/X6/V6vV6v1+v1er1er9fr9Xq9Xq/X6/V6vV6v1+v1er1er9fr9Xq9Xq/X6/V6vV6v1+v1er1er9fr9Xq9Xq/X6/V6vV6v1+v1er1er9fr9Xq9Xq/X6/V6vV6v1+v1er1er9fr9Xq9Xq/X6/V6vV6v1+v1er1er9fr9Xq9Xq/X6/V6vV6v1+v1er1er9fr9Xq9Xq/X6/V6vV6v1+v1er1er9fr9Xq9Xq/X6/V6vV6v1+v1er1er9fr9Xq9Xq/X6/V6vV6v1+v1er1er9fr9Xq9Xq/X6/V6vV6v1+v1er1er9fr9Xq9Xq/X6/V6vV6v1+v1er1er9fr9Xq9Xq/X6/V6vV6v1+v1er1er9fr9Xq9Xq/X6/V6vV6v1+v1er1er9fr9Xq9Xq/X6/X6/X6/V6vV6v1+v1er1er9fr9Xq9Xq/X6/V6vV6v1+v1er1er9fr9Xq9Xq/X6/V6vV6v1+v1er1er9fr9Xq9Xq/X6/V6vV6v1+v1er1er9fr9Xq9Xq/X6/V6vV6v1+v1er1er9fr9Xq9Xq/X6/V6vV6v1+v1er1er9fr9Xq9Xq/X6/V6vV6v1+v1er1er9fr9Xq9Xq/X6/V6vV6v1+v1er1er9fr9Xq9Xq/X6/V6vV6v1+v1er1f+A5FqD6O35m8oAAAAAElFTkSuQmCC";
+        currentHuellaB64 = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAYAAABw4pVU...";
         
         showPreview(currentHuellaB64);
         setStatus("Captura exitosa. Revisa la imagen y confirma.");
@@ -190,10 +188,10 @@
   });
 
   btnSave?.addEventListener('click', async () => {
-    const alumnoId = Number(alumnoIdEl.value || 0);
-    const turnoId  = Number(turnoIdEl.value || 0);
+    const studentId = Number(studentIdEl.value || 0);
+    const ticketId  = Number(ticketIdEl.value || 0);
 
-    if (!alumnoId || !turnoId || !currentHuellaB64) {
+    if (!studentId || !ticketId || !currentHuellaB64) {
       showToast("Error: No hay captura válida.");
       return;
     }
@@ -203,8 +201,8 @@
 
     try {
       const fd = new FormData();
-      fd.append("alumno_id", String(alumnoId));
-      fd.append("turno_id", String(turnoId));
+      fd.append("student_id", String(studentId));
+      fd.append("turno_id", String(ticketId));
       fd.append("huella_b64", currentHuellaB64);
 
       if (csrfName && csrfHash) {

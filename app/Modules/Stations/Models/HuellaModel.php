@@ -84,39 +84,39 @@ class HuellaModel extends Model
         $fileId = (int) $this->db->insertID();
 
         $this->db->table('students')
-            ->where('id_student', $studentId)
+            ->where('id', $studentId)
             ->update([
                 'fingerprint_file_id' => $fileId,
                 'updated_at'          => $now,
             ]);
 
         $currentTicket = $this->db->table('tickets')
-            ->select('current_stage_id, ticket_status_id')
-            ->where('id_ticket', $ticketId)
+            ->select('stage_id, status_id')
+            ->where('id', $ticketId)
             ->get()
             ->getRowArray();
 
-        $nextStageId = $this->findEtapaId(['fingerprint_saved', 'FINGERPRINT_CAPTURED', 'HUELLA_CAPTURADA', 'COMPLETED']);
-        $statusId = $this->findEstatusId(['finished', 'FINALIZADO', 'COMPLETED']);
+        $nextStageId = $this->findEtapaId(['FINGER_CAPTURED', 'fingerprint_saved', 'FINGERPRINT_CAPTURED', 'HUELLA_CAPTURADA', 'COMPLETED']);
+        $statusId = $this->findEstatusId(['FINISHED', 'finished', 'FINALIZADO', 'COMPLETED']);
 
         $ticketUpdate = ['updated_at' => $now];
         if ($nextStageId !== null) {
-            $ticketUpdate['current_stage_id'] = $nextStageId;
+            $ticketUpdate['stage_id'] = $nextStageId;
         }
         if ($statusId !== null) {
-            $ticketUpdate['ticket_status_id'] = $statusId;
+            $ticketUpdate['status_id'] = $statusId;
         }
 
         $this->db->table('tickets')
-            ->where('id_ticket', $ticketId)
+            ->where('id', $ticketId)
             ->update($ticketUpdate);
 
         $this->db->table('ticket_events')->insert([
             'ticket_id'          => $ticketId,
             'event_type'         => 'fingerprint_saved',
-            'previous_stage_id'  => $currentTicket['current_stage_id'] ?? null,
+            'previous_stage_id'  => $currentTicket['stage_id'] ?? null,
             'new_stage_id'       => $nextStageId,
-            'previous_status_id' => $currentTicket['ticket_status_id'] ?? null,
+            'previous_status_id' => $currentTicket['status_id'] ?? null,
             'new_status_id'      => $statusId,
             'user_id'            => session('auth')['id'] ?? null,
             'details_json'       => json_encode(['file_id' => $fileId, 'path' => $relativePath], JSON_UNESCAPED_UNICODE),
@@ -165,13 +165,13 @@ class HuellaModel extends Model
     {
         foreach ($codes as $code) {
             $row = $this->db->table('cat_stages')
-                ->select('id_stage')
+                ->select('id')
                 ->where('code', $code)
                 ->get(1)
                 ->getRowArray();
 
             if ($row) {
-                return (int) $row['id_stage'];
+                return (int) $row['id'];
             }
         }
 
@@ -182,13 +182,13 @@ class HuellaModel extends Model
     {
         foreach ($codes as $code) {
             $row = $this->db->table('cat_ticket_status')
-                ->select('id_status')
+                ->select('id')
                 ->where('code', $code)
                 ->get(1)
                 ->getRowArray();
 
             if ($row) {
-                return (int) $row['id_status'];
+                return (int) $row['id'];
             }
         }
 

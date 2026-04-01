@@ -11,7 +11,7 @@ $routes->group('', ['namespace' => 'App\Modules\PublicPortal\Controllers'], stat
     $routes->get('/', 'TicketController::index');
     $routes->get('turno', 'TicketController::index');
     $routes->post('turno/buscar', 'TicketController::searchStudent');
-    $routes->post('turno/generar', 'TicketController::generate');
+    $routes->post('turno/generar', 'TicketController::generateTicket'); // Corregido: generate -> generateTicket
 
     $routes->get('t/(:segment)', 'TicketController::status/$1');
     $routes->get('t/(:segment)/json', 'TicketController::statusJson/$1');
@@ -21,13 +21,17 @@ $routes->group('', ['namespace' => 'App\Modules\PublicPortal\Controllers'], stat
 // 2. AUTHENTICATION
 $routes->group('', ['namespace' => 'App\Modules\Auth\Controllers'], static function ($routes) {
     $routes->get('login', 'LoginController::index');
-    $routes->post('login', 'LoginController::login');
+    $routes->post('login', 'LoginController::attempt'); // Corregido: login -> attempt
     $routes->get('logout', 'LoginController::logout');
+    $routes->addRedirect('admin/login', 'login');
 });
 
 // 3. CAPTURE STATIONS (Protected by AuthFilter)
 $routes->group('captura', ['namespace' => 'App\Modules\Stations\Controllers', 'filter' => 'auth'], static function ($routes) {
     
+    // Redirigir la raíz del grupo a fotografía
+    $routes->get('/', 'CameraController::index');
+
     // Fotografía
     $routes->get('foto', 'CameraController::index');
     $routes->get('foto/(:num)', 'CameraController::index/$1');
@@ -37,20 +41,21 @@ $routes->group('captura', ['namespace' => 'App\Modules\Stations\Controllers', 'f
     // Firma
     $routes->get('firma', 'FirmaController::index');
     $routes->get('firma/(:num)', 'FirmaController::index/$1');
-    $routes->get('firma/cola', 'FirmaController::cola');
-    $routes->get('firma/alumno', 'FirmaController::alumno');
-    $routes->post('firma/guardar', 'FirmaController::guardar');
+    $routes->get('firma/cola', 'FirmaController::queue'); // Unificado a queue
+    $routes->get('firma/alumno', 'FirmaController::student'); // Unificado a student
+    $routes->post('firma/guardar', 'FirmaController::save'); // Unificado a save
 
     // Huella
     $routes->get('huella', 'HuellaController::index');
     $routes->get('huella/(:num)', 'HuellaController::index/$1');
-    $routes->get('huella/cola', 'HuellaController::cola');
-    $routes->get('huella/alumno', 'HuellaController::alumno');
-    $routes->post('huella/guardar', 'HuellaController::guardar');
+    $routes->get('huella/cola', 'HuellaController::queue'); // Unificado a queue
+    $routes->get('huella/alumno', 'HuellaController::student'); // Unificado a student
+    $routes->post('huella/guardar', 'HuellaController::save'); // Unificado a save
 });
 
 // 4. ADMIN DASHBOARD (Protected by AuthFilter)
 $routes->group('admin', ['namespace' => 'App\Modules\Admin\Controllers', 'filter' => 'auth'], static function ($routes) {
+    $routes->get('/', 'DashboardController::index');
     $routes->get('dashboard', 'DashboardController::index');
     $routes->get('dashboard/alumnos', 'DashboardController::students');
     $routes->post('dashboard/estatus', 'DashboardController::changeStatus');

@@ -1,0 +1,61 @@
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Documentation
+*.md
+!README.md
+ARCHITECTURE.md
+BEST_PRACTICES.md
+GEMINI.md
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# IDE and editor files
+.vscode
+.idea
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Testing
+tests/
+phpunit.xml.dist
+.phpunit.result.cache
+
+# Docker
+docker-compose*.yml
+Dockerfile
+.dockerignore
+
+# Build files
+builds
+
+# Temporary files
+*.tmp
+*.log
+tmp/
+temp/
+
+# Node modules (if any frontend build)
+node_modules/
+npm-debug.log
+
+# Composer (we'll install in container)
+vendor/
+composer.lock
+
+# Writable folders (will be created/mounted)
+writable/cache/
+writable/logs/
+writable/session/
+writable/uploads/
+writable/debugbar/
+
+# Public uploads (will be mounted as volume)
+public/uploads/*

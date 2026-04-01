@@ -10,7 +10,7 @@ use CodeIgniter\Model;
 class UserModel extends Model
 {
     protected $table      = 'users';
-    protected $primaryKey = 'id_user';
+    protected $primaryKey = 'id';
     protected $returnType = 'array';
 
     protected $allowedFields = [
@@ -33,7 +33,7 @@ class UserModel extends Model
     public function findActiveByUsername(string $username): ?array
     {
         return $this->select('users.*, roles.code as role_code')
-                    ->join('roles', 'roles.id_role = users.role_id', 'left')
+                    ->join('roles', 'roles.id = users.role_id', 'left')
                     ->where('username', $username)
                     ->where('is_active', 1)
                     ->first();

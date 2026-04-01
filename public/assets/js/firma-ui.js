@@ -160,7 +160,7 @@
       capStatus.textContent = "Firma guardada correctamente. Selecciona el siguiente alumno para continuar.";
       setCaptureEnabled(false);
       hasInk = false;
-      selectedTurnoId = Number(json?.current?.turno_id || 0);
+      selectedTurnoId = Number(json?.current?.ticket_id || 0);
 
       // refresca cola por si se mueve a siguiente estado
       await fetchCola(true);
@@ -189,22 +189,22 @@
     }
 
     colaList.innerHTML = list.map(a => `
-      <div class="${Number(a.turno_id) === selectedTurnoId ? "d-queue-item is-active" : "d-queue-item"}"
-           data-alumno-id="${a.alumno_id}"
-           data-turno-id="${a.turno_id}"
-           data-nombre="${escapeHtml(a.nombre)}"
-           data-control="${escapeHtml(a.no_control)}"
-           data-carrera="${escapeHtml(a.carrera)}"
-           data-semestre="${escapeHtml(a.semestre)}"
-           data-estatus="${escapeHtml(a.estatus)}">
+      <div class="${Number(a.ticket_id) === selectedTurnoId ? "d-queue-item is-active" : "d-queue-item"}"
+           data-alumno-id="${a.student_id}"
+           data-turno-id="${a.ticket_id}"
+           data-nombre="${escapeHtml(a.name)}"
+           data-control="${escapeHtml(a.control_number)}"
+           data-carrera="${escapeHtml(a.career)}"
+           data-semestre="${escapeHtml(a.semester)}"
+           data-estatus="${escapeHtml(a.status)}">
         <div>
-          <div class="d-queue-name">${escapeHtml(a.nombre)}</div>
+          <div class="d-queue-name">${escapeHtml(a.name)}</div>
           <div class="d-queue-meta" style="text-align:left;">
-            ${escapeHtml(a.no_control)} · ${escapeHtml(a.carrera)}
+            ${escapeHtml(a.control_number)} · ${escapeHtml(a.career)}
           </div>
         </div>
         <div class="d-queue-meta">
-          Turno <strong>${escapeHtml(a.turno)}</strong><br>
+          Turno <strong>${escapeHtml(a.ticket_folio)}</strong><br>
           Listo para capturar
         </div>
       </div>
@@ -243,8 +243,8 @@
   colaSearch.addEventListener("input", () => {
     const q = (colaSearch.value || "").toLowerCase().trim();
     const filtered = !q ? colaData : colaData.filter(a =>
-      String(a.nombre).toLowerCase().includes(q) ||
-      String(a.no_control).toLowerCase().includes(q)
+      String(a.name).toLowerCase().includes(q) ||
+      String(a.control_number).toLowerCase().includes(q)
     );
     renderCola(filtered);
   });
@@ -253,8 +253,8 @@
     const q = (colaSearch.value || "").toLowerCase().trim();
 
     return !q ? items : items.filter(a =>
-      String(a.nombre).toLowerCase().includes(q) ||
-      String(a.no_control).toLowerCase().includes(q)
+      String(a.name).toLowerCase().includes(q) ||
+      String(a.control_number).toLowerCase().includes(q)
     );
   }
 
@@ -267,7 +267,7 @@
       const list = filterQueue(colaData);
       renderCola(list);
 
-      const selectedStillExists = colaData.some((item) => Number(item.turno_id) === selectedTurnoId);
+      const selectedStillExists = colaData.some((item) => Number(item.ticket_id) === selectedTurnoId);
 
       if (selectedStillExists) {
         const selectedNode = colaList.querySelector(`[data-turno-id="${selectedTurnoId}"]`);

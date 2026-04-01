@@ -1,0 +1,88 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: kiosco_production
+    restart: unless-stopped
+    environment:
+      - CI_ENVIRONMENT=production
+    env_file:
+      - .env.production
+    volumes:
+      # Only mount writable directories and uploads
+      - ./writable:/var/www/html/writable
+      - ./public/uploads:/var/www/html/public/uploads
+      # Mount .env file for runtime configuration
+      - ./.env.production:/var/www/html/.env:ro
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - kiosco_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  db:
+    image: mysql:8.0
+    container_name: kiosco_db_production
+    restart: unless-stopped
+    environment:
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+      - MYSQL_DATABASE=kiosco_production
+      - MYSQL_USER=${database.default.username}
+      - MYSQL_PASSWORD=${database.default.password}
+    volumes:
+      - db_production_data:/var/lib/mysql
+      # Backup directory (optional, mount host directory for backups)
+      - ./backups:/backups
+    # Don't expose MySQL port to host in production
+    # Only accessible through Docker network
+    networks:
+      - kiosco_network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    command: 
+      - --default-authentication-plugin=mysql_native_password
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --max_connections=200
+
+  tunnel:
+    image: cloudflare/cloudflared:latest
+    container_name: kiosco_tunnel
+    restart: unless-stopped
+    command: tunnel --no-autoupdate run
+    environment:
+      - TUNNEL_TOKEN=${CLOUDFLARE_TUNNEL_TOKEN}
+    depends_on:
+      app:
+        condition: service_healthy
+    networks:
+      - kiosco_network
+    healthcheck:
+      test: ["CMD", "cloudflared", "tunnel", "info"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+networks:
+  kiosco_network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.25.0.0/16
+
+volumes:
+  db_production_data:
+    driver: local

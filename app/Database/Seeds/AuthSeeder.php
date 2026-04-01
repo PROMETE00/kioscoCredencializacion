@@ -28,7 +28,7 @@ class AuthSeeder extends Seeder
 
         $getRoleId = function (string $code) {
             $row = $this->db->table('roles')->where('code', $code)->get()->getRowArray();
-            return (int) ($row['id_role'] ?? 0);
+            return (int) ($row['id'] ?? 0);
         };
 
         // 2) Default Users

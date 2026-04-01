@@ -38,7 +38,7 @@
 
 <?= $this->section('scripts') ?>
 <script id="cfg"
-  data-save-url="<?= site_url('captura/guardar') ?>"
+  data-save-url="<?= site_url('captura/foto/guardar') ?>"
   data-csrf-name="<?= csrf_token() ?>"
   data-csrf-hash="<?= csrf_hash() ?>"
 ></script>

@@ -57,13 +57,13 @@
     // ---- Render datos alumno ----
     function renderCurrent(c) {
       current = c || null;
-      studentIdEl.value = c?.alumno_id || c?.id || '';
-      if (turnoIdEl) turnoIdEl.value = c?.turno_id || '';
-      pNombre.textContent   = c?.nombre || '—';
-      pControl.textContent  = c?.no_control || '—';
-      pCarrera.textContent  = c?.carrera || '—';
-      pSemestre.textContent = c?.semestre || '—';
-      pEstatus.textContent  = c?.estatus || '—';
+      studentIdEl.value = c?.student_id || c?.id || '';
+      if (turnoIdEl) turnoIdEl.value = c?.ticket_id || '';
+      pNombre.textContent   = c?.name || '—';
+      pControl.textContent  = c?.control_number || '—';
+      pCarrera.textContent  = c?.career || '—';
+      pSemestre.textContent = c?.semester || '—';
+      pEstatus.textContent  = c?.status || '—';
       if (saveInfo) saveInfo.textContent = '—';
       if (preview) preview.removeAttribute('src');
       btnSave.disabled = true;
@@ -75,23 +75,23 @@
     function renderQueue(filter='') {
       const f = (filter || '').toLowerCase().trim();
       const items = !f ? queue : queue.filter(x =>
-        String(x.nombre || '').toLowerCase().includes(f) ||
-        String(x.no_control || '').toLowerCase().includes(f)
+        String(x.name || '').toLowerCase().includes(f) ||
+        String(x.control_number || '').toLowerCase().includes(f)
       );
 
       qList.innerHTML = '';
       items.forEach(x => {
         const li = document.createElement('li');
-          li.className = 'd-qItem' + ((current && Number(x.turno_id) === Number(current.turno_id)) ? ' is-active' : '');
-          li.dataset.id = x.alumno_id;
-          li.dataset.turnoId = x.turno_id;
+          li.className = 'd-qItem' + ((current && Number(x.ticket_id) === Number(current.ticket_id)) ? ' is-active' : '');
+          li.dataset.id = x.student_id;
+          li.dataset.turnoId = x.ticket_id;
 
         li.innerHTML = `
-          <div class="d-qName">${escapeHtml(x.nombre || '—')}</div>
+          <div class="d-qName">${escapeHtml(x.name || '—')}</div>
           <div class="d-qMeta">
-            <span>#${escapeHtml(String(x.no_control || '—'))}</span>
-            <span>${escapeHtml(String(x.carrera || '—'))}</span>
-            <span>Sem ${escapeHtml(String(x.semestre || '—'))}</span>
+            <span>#${escapeHtml(String(x.control_number || '—'))}</span>
+            <span>${escapeHtml(String(x.career || '—'))}</span>
+            <span>Sem ${escapeHtml(String(x.semester || '—'))}</span>
           </div>
         `;
 
@@ -129,14 +129,14 @@
      let lastFrameFilename = null;
      let rafId = null;
 
-     const SEGMENTATION_INTERVAL_MS = 140;
-     const SEGMENTATION_MAX_WIDTH = 640;
-     const SEGMENTATION_LOAD_TIMEOUT_MS = 12000;
+     const SEGMENTATION_INTERVAL_MS = 180; // Un poco más de tiempo entre frames de segmentación para no saturar CPU
+     const SEGMENTATION_MAX_WIDTH = 480; // Reducir resolución de entrada para segmentación (más rápido)
+     const SEGMENTATION_LOAD_TIMEOUT_MS = 15000;
 
      const segmentationInputCanvas = document.createElement('canvas');
-     const segmentationInputCtx = segmentationInputCanvas.getContext('2d', { willReadFrequently: true });
+     const segmentationInputCtx = segmentationInputCanvas.getContext('2d', { willReadFrequently: true, alpha: false });
      const segmentationOutputCanvas = document.createElement('canvas');
-     const segmentationOutputCtx = segmentationOutputCanvas.getContext('2d');
+     const segmentationOutputCtx = segmentationOutputCanvas.getContext('2d', { alpha: true });
 
     const fitCanvasToVideo = () => {
       const w = video.videoWidth || 1280;
@@ -381,8 +381,8 @@
 
     const save = async () => {
       const sid = studentIdEl.value;
-      const turnoId = turnoIdEl?.value || '';
-      if (!sid || !turnoId || !lastFrameBlob) return;
+      const ticketId = turnoIdEl?.value || '';
+      if (!sid || !ticketId || !lastFrameBlob) return;
 
       btnSave.disabled = true;
       setLoading(true, 'Guardando…');
@@ -392,7 +392,7 @@
         const fd = new FormData();
         fd.append('image', await blobToDataUrl(lastFrameBlob));
         fd.append('student_id', sid);
-        fd.append('turno_id', turnoId);
+        fd.append('turno_id', ticketId);
         if (CSRF_NAME && CSRF_HASH) fd.append(CSRF_NAME, CSRF_HASH);
 
         const res = await fetch(SAVE_URL, { method: 'POST', body: fd });
@@ -412,7 +412,7 @@
         showToast('Guardado ✅');
 
         // quitar de cola al alumno guardado
-        queue = Array.isArray(json.queue) ? json.queue : queue.filter(x => Number(x.turno_id) !== Number(turnoId));
+        queue = Array.isArray(json.queue) ? json.queue : queue.filter(x => Number(x.ticket_id) !== Number(ticketId));
 
         const next = json.current || (queue.length ? queue[0] : null);
         renderCurrent(next);

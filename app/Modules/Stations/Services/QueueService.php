@@ -26,13 +26,13 @@ class QueueService
     {
         $builder = $this->db->table('tickets t')
             ->select([
-                's.id_student AS id',
-                's.id_student AS student_id',
-                't.id_ticket AS ticket_id',
+                's.id AS id',
+                's.id AS student_id',
+                't.id AS ticket_id',
                 't.folio AS ticket_folio',
                 's.full_name AS name',
-                'COALESCE(NULLIF(s.control_number, ""), s.token_number) AS control_number',
-                'COALESCE(NULLIF(s.career_name, ""), s.career_key) AS career',
+                'COALESCE(NULLIF(s.control_number, ""), s.registration_number) AS control_number',
+                'COALESCE(NULLIF(s.major_name, ""), s.major_code) AS career',
                 'NULL AS semester',
                 'ts.name AS status',
                 'cs.code AS stage_code',
@@ -42,25 +42,25 @@ class QueueService
                 's.signature_file_id',
                 's.fingerprint_file_id',
             ])
-            ->join('students s', 's.id_student = t.student_id', 'inner')
-            ->join('cat_stages cs', 'cs.id_stage = t.current_stage_id', 'left')
-            ->join('cat_ticket_status ts', 'ts.id_status = t.ticket_status_id', 'left')
+            ->join('students s', 's.id = t.student_id', 'inner')
+            ->join('cat_stages cs', 'cs.id = t.stage_id', 'left')
+            ->join('cat_ticket_status ts', 'ts.id = t.status_id', 'left')
             ->where('t.is_active', 1)
             ->where('t.expires_at >=', date('Y-m-d H:i:s'));
 
         // Filtering based on the station type
         if ($type === 'photo') {
-            $builder->join('ticket_events te_photo', "te_photo.ticket_id = t.id_ticket AND te_photo.event_type = 'photo_saved'", 'left')
+            $builder->join('ticket_events te_photo', "te_photo.ticket_id = t.id AND te_photo.event_type = 'photo_saved'", 'left')
                     ->where('te_photo.ticket_id IS NULL', null, false);
         } elseif ($type === 'signature') {
             // Must have photo, but no signature
-            $builder->join('ticket_events te_photo', "te_photo.ticket_id = t.id_ticket AND te_photo.event_type = 'photo_saved'", 'inner')
-                    ->join('ticket_events te_signature', "te_signature.ticket_id = t.id_ticket AND te_signature.event_type = 'signature_saved'", 'left')
+            $builder->join('ticket_events te_photo', "te_photo.ticket_id = t.id AND te_photo.event_type = 'photo_saved'", 'inner')
+                    ->join('ticket_events te_signature', "te_signature.ticket_id = t.id AND te_signature.event_type = 'signature_saved'", 'left')
                     ->where('te_signature.ticket_id IS NULL', null, false);
         } elseif ($type === 'fingerprint') {
             // Must have signature, but no fingerprint
-            $builder->join('ticket_events te_signature', "te_signature.ticket_id = t.id_ticket AND te_signature.event_type = 'signature_saved'", 'inner')
-                    ->join('ticket_events te_fingerprint', "te_fingerprint.ticket_id = t.id_ticket AND te_fingerprint.event_type = 'fingerprint_saved'", 'left')
+            $builder->join('ticket_events te_signature', "te_signature.ticket_id = t.id AND te_signature.event_type = 'signature_saved'", 'inner')
+                    ->join('ticket_events te_fingerprint', "te_fingerprint.ticket_id = t.id AND te_fingerprint.event_type = 'fingerprint_saved'", 'left')
                     ->where('te_fingerprint.ticket_id IS NULL', null, false);
         }
 
@@ -80,7 +80,7 @@ class QueueService
     {
         return $this->getBaseQueueBuilder($type)
             ->orderBy('t.created_at', 'ASC')
-            ->orderBy('t.id_ticket', 'ASC')
+            ->orderBy('t.id', 'ASC')
             ->limit($limit)
             ->get()
             ->getResultArray();
@@ -94,11 +94,11 @@ class QueueService
         $builder = $this->getBaseQueueBuilder($type);
         
         if ($ticketId) {
-            $builder->where('t.id_ticket', $ticketId);
+            $builder->where('t.id', $ticketId);
         }
 
         $row = $builder->orderBy('t.created_at', 'ASC')
-                       ->orderBy('t.id_ticket', 'ASC')
+                       ->orderBy('t.id', 'ASC')
                        ->get(1)
                        ->getRowArray();
 
@@ -111,7 +111,7 @@ class QueueService
     public function getByStudentId(string $type, int $studentId): ?array
     {
         $row = $this->getBaseQueueBuilder($type)
-            ->where('s.id_student', $studentId)
+            ->where('s.id', $studentId)
             ->orderBy('t.created_at', 'ASC')
             ->get(1)
             ->getRowArray();

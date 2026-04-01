@@ -48,7 +48,7 @@ class LoginController extends BaseController
 
         // Se guarda el mínimo de información necesaria en sesión.
         session()->set('auth', [
-            'id'        => (int)$user['id_user'],
+            'id'        => (int)$user['id'],
             'username'  => $user['username'],
             'full_name' => $user['full_name'],
             'role_id'   => (int)$user['role_id'],

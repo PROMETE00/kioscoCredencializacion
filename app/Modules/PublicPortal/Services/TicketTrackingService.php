@@ -9,7 +9,7 @@ class TicketTrackingService
 {
     private const CAMPUS = 'Instituto Tecnológico de Oaxaca';
     private const FINAL_STATUSES = ['EXPIRED', 'CANCELLED', 'FINISHED', 'COMPLETED', 'REJECTED', 'vencido', 'cancelado', 'finalizado', 'COMPLETADO', 'RECHAZADO'];
-    private const IN_PROGRESS_STATUSES = ['IN_PROGRESS', 'EN_PROCESO'];
+    private const IN_PROGRESS_STATUSES = ['IN_PROGRESS', 'EN_PROCESO', 'WAITING'];
 
     public function __construct(
         private readonly int $baseTimeSeconds = 240,
@@ -234,7 +234,7 @@ class TicketTrackingService
             return true;
         }
 
-        if (!empty($ticket['expires_at']) && strtotime((string) $ticket['expires_at']) < time()) {
+        if (!empty($ticket['expires_at']) && strtotime((string) ($ticket['expires_at'] ?? '')) < time()) {
             return true;
         }
 

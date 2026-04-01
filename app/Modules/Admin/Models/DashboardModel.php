@@ -29,17 +29,17 @@ class DashboardModel extends Model
         if ($q !== '') {
             $builder->groupStart()
                 ->like('s.control_number', $q)
-                ->orLike('s.token_number', $q)
+                ->orLike('s.registration_number', $q)
                 ->orLike('s.full_name', $q)
-                ->orLike('s.career_name', $q)
+                ->orLike('s.major_name', $q)
                 ->orLike('t.folio', $q)
             ->groupEnd();
         }
 
         $rows = $builder
-            ->orderBy('CASE WHEN t.id_ticket IS NULL THEN 1 ELSE 0 END', '', false)
+            ->orderBy('CASE WHEN t.id IS NULL THEN 1 ELSE 0 END', '', false)
             ->orderBy('COALESCE(t.updated_at, s.updated_at, s.created_at)', 'DESC', false)
-            ->orderBy('s.id_student', 'ASC')
+            ->orderBy('s.id', 'ASC')
             ->limit($limit)
             ->get()
             ->getResultArray();
@@ -53,7 +53,7 @@ class DashboardModel extends Model
     public function getStatusOptions(): array
     {
         return $this->db->table('cat_ticket_status')
-            ->select('id_status, code, name')
+            ->select('id, code, name')
             ->orderBy('name', 'ASC')
             ->get()
             ->getResultArray();
@@ -64,6 +64,13 @@ class DashboardModel extends Model
      */
     public function getKpis(): array
     {
+        $cacheKey = 'dashboard_kpis_today';
+        $cache = \Config\Services::cache();
+
+        if ($cachedData = $cache->get($cacheKey)) {
+            return $cachedData;
+        }
+
         $todayStart = date('Y-m-d 00:00:00');
         $todayEnd   = date('Y-m-d 23:59:59');
 
@@ -99,7 +106,7 @@ class DashboardModel extends Model
             ->where('created_at <=', $todayEnd)
             ->countAllResults();
 
-        return [
+        $kpis = [
             'total_students'      => $totalStudents,
             'tickets_today'       => $ticketsToday,
             'photos_today'        => $photosToday,
@@ -107,6 +114,11 @@ class DashboardModel extends Model
             'fingerprints_today'  => $fingerprintsToday,
             'completed_today'     => $completedToday,
         ];
+
+        // Guardar en caché por 15 segundos
+        $cache->save($cacheKey, $kpis, 15);
+
+        return $kpis;
     }
 
     /**
@@ -115,8 +127,8 @@ class DashboardModel extends Model
     public function updateTicketStatus(int $ticketId, int $statusId): array
     {
         $ticket = $this->db->table('tickets')
-            ->select('id_ticket, student_id, ticket_status_id, current_stage_id')
-            ->where('id_ticket', $ticketId)
+            ->select('id, student_id, status_id, stage_id')
+            ->where('id', $ticketId)
             ->get(1)
             ->getRowArray();
 
@@ -125,8 +137,8 @@ class DashboardModel extends Model
         }
 
         $status = $this->db->table('cat_ticket_status')
-            ->select('id_status')
-            ->where('id_status', $statusId)
+            ->select('id')
+            ->where('id', $statusId)
             ->get(1)
             ->getRowArray();
 
@@ -139,19 +151,19 @@ class DashboardModel extends Model
         $this->db->transStart();
 
         $this->db->table('tickets')
-            ->where('id_ticket', $ticketId)
+            ->where('id', $ticketId)
             ->update([
-                'ticket_status_id' => $statusId,
+                'status_id' => $statusId,
                 'updated_at'       => $now,
             ]);
 
-        if ((int) $ticket['ticket_status_id'] !== $statusId) {
+        if ((int) $ticket['status_id'] !== $statusId) {
             $this->db->table('ticket_events')->insert([
                 'ticket_id'           => $ticketId,
                 'event_type'          => 'status_updated_dashboard',
-                'previous_stage_id'   => $ticket['current_stage_id'] ?? null,
-                'new_stage_id'        => $ticket['current_stage_id'] ?? null,
-                'previous_status_id'  => $ticket['ticket_status_id'] ?? null,
+                'previous_stage_id'   => $ticket['stage_id'] ?? null,
+                'new_stage_id'        => $ticket['stage_id'] ?? null,
+                'previous_status_id'  => $ticket['status_id'] ?? null,
                 'new_status_id'       => $statusId,
                 'user_id'             => session('auth')['id'] ?? null,
                 'details_json'        => json_encode(['origin' => 'dashboard'], JSON_UNESCAPED_UNICODE),
@@ -200,7 +212,7 @@ class DashboardModel extends Model
         $this->db->transStart();
 
         $this->db->table('students')
-            ->where('id_student', $studentId)
+            ->where('id', $studentId)
             ->update([
                 $field       => null,
                 'updated_at' => $now,
@@ -221,11 +233,11 @@ class DashboardModel extends Model
 
         $ticketUpdate = ['updated_at' => $now];
         if ($stageId !== null) {
-            $ticketUpdate['current_stage_id'] = $stageId;
+            $ticketUpdate['stage_id'] = $stageId;
         }
 
         $this->db->table('tickets')
-            ->where('id_ticket', $ticketId)
+            ->where('id', $ticketId)
             ->update($ticketUpdate);
 
         $this->db->table('ticket_events')->insert([
@@ -253,37 +265,37 @@ class DashboardModel extends Model
     {
         return $this->db->table('students s')
             ->select([
-                's.id_student AS student_id',
+                's.id AS student_id',
                 's.control_number',
-                's.token_number',
+                's.registration_number',
                 's.full_name AS name',
-                'COALESCE(NULLIF(s.career_name, ""), s.career_key, "—") AS career',
+                'COALESCE(NULLIF(s.major_name, ""), s.major_code, "—") AS career',
                 '"OAXACA" AS campus',
                 's.photo_file_id',
                 's.signature_file_id',
                 's.fingerprint_file_id',
                 's.updated_at AS student_updated_at',
-                't.id_ticket AS ticket_id',
+                't.id AS ticket_id',
                 't.folio',
                 't.expires_at',
                 't.updated_at AS ticket_updated_at',
-                'ts.id_status AS status_id',
+                'ts.id AS status_id',
                 'ts.code AS status_code',
                 'ts.name AS status_name',
-                'cs.id_stage AS stage_id',
+                'cs.id AS stage_id',
                 'cs.code AS stage_code',
                 'cs.name AS stage_name',
             ])
-            ->join('tickets t', 't.student_id = s.id_student AND t.is_active = 1', 'left')
-            ->join('cat_ticket_status ts', 'ts.id_status = t.ticket_status_id', 'left')
-            ->join('cat_stages cs', 'cs.id_stage = t.current_stage_id', 'left');
+            ->join('tickets t', 't.student_id = s.id AND t.is_active = 1', 'left')
+            ->join('cat_ticket_status ts', 'ts.id = t.status_id', 'left')
+            ->join('cat_stages cs', 'cs.id = t.stage_id', 'left');
     }
 
     private function getRowByStudentId(int $studentId): ?array
     {
         $row = $this->baseAdminBuilder()
-            ->where('s.id_student', $studentId)
-            ->orderBy('CASE WHEN t.id_ticket IS NULL THEN 1 ELSE 0 END', '', false)
+            ->where('s.id', $studentId)
+            ->orderBy('CASE WHEN t.id IS NULL THEN 1 ELSE 0 END', '', false)
             ->orderBy('COALESCE(t.updated_at, s.updated_at, s.created_at)', 'DESC', false)
             ->get(1)
             ->getRowArray();
@@ -293,7 +305,7 @@ class DashboardModel extends Model
 
     private function normalizeRow(array $row): array
     {
-        $row['identifier']  = $row['control_number'] ?: ($row['token_number'] ?: '—');
+        $row['identifier']  = $row['control_number'] ?: ($row['registration_number'] ?: '—');
         $row['status_name'] = $row['status_name'] ?: 'No ticket';
         $row['stage_name']  = $row['stage_name'] ?: 'No ticket';
         $row['updated_at']  = $row['ticket_updated_at'] ?: $row['student_updated_at'];
@@ -306,22 +318,22 @@ class DashboardModel extends Model
 
     private function resolveStageIdFromArtifacts(array $artifacts): ?int
     {
-        $code = 'ticket_generated';
+        $code = 'TICKET_GENERATED';
 
         if (!empty($artifacts['fingerprint'])) {
-            $code = 'fingerprint_saved';
+            $code = 'FINGER_CAPTURED';
         } elseif (!empty($artifacts['signature'])) {
-            $code = 'signature_saved';
+            $code = 'SIGNATURE_CAPTURED';
         } elseif (!empty($artifacts['photo'])) {
-            $code = 'photo_saved';
+            $code = 'PHOTO_CAPTURED';
         }
 
         $row = $this->db->table('cat_stages')
-            ->select('id_stage')
+            ->select('id')
             ->where('code', $code)
             ->get(1)
             ->getRowArray();
 
-        return $row ? (int) $row['id_stage'] : null;
+        return $row ? (int) $row['id'] : null;
     }
 }

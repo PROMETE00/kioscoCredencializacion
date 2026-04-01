@@ -21,9 +21,6 @@
     const tbody = document.getElementById('dashboardRows');
     const meta = document.getElementById('dashboardMeta');
     const toast = document.getElementById('dashboardToast');
-    const kpiTotalAlumnos = document.getElementById('kpiTotalAlumnos');
-    const kpiTurnosActivos = document.getElementById('kpiTurnosActivos');
-    const kpiPendientes = document.getElementById('kpiPendientes');
 
     const showToast = (message) => {
       if (!toast) return;
@@ -42,8 +39,8 @@
     `;
 
     const renderStatusOptions = (selectedId) => statusOptions.map((option) => `
-      <option value="${option.id_estatus}" ${Number(option.id_estatus) === Number(selectedId) ? 'selected' : ''}>
-        ${escapeHtml(option.nombre)}
+      <option value="${option.id}" ${Number(option.id) === Number(selectedId) ? 'selected' : ''}>
+        ${escapeHtml(option.name)}
       </option>
     `).join('');
 
@@ -57,39 +54,39 @@
       }
 
       tbody.innerHTML = rows.map((row) => {
-        const hasTurn = Number(row.turno_id) > 0;
+        const hasTurn = Number(row.ticket_id) > 0;
         return `
-          <tr data-alumno-id="${row.alumno_id}" data-turno-id="${row.turno_id || ''}">
+          <tr data-alumno-id="${row.student_id}" data-turno-id="${row.ticket_id || ''}">
             <td>
-              <div class="d-row-title">${escapeHtml(row.nombre)}</div>
-              <div class="d-row-sub mono">${escapeHtml(row.identificador)}${row.numero_ficha ? ` · Ficha ${escapeHtml(row.numero_ficha)}` : ''}</div>
-              <div class="d-row-sub">${escapeHtml(row.carrera)} · ${escapeHtml(row.campus)}</div>
+              <div class="d-row-title">${escapeHtml(row.name)}</div>
+              <div class="d-row-sub mono">${escapeHtml(row.identifier)}</div>
+              <div class="d-row-sub">${escapeHtml(row.career)} · ${escapeHtml(row.campus)}</div>
             </td>
             <td>
               <div class="d-row-title">${escapeHtml(row.folio || 'Sin turno activo')}</div>
-              <div class="d-row-sub">${escapeHtml(row.etapa_nombre)}</div>
+              <div class="d-row-sub">${escapeHtml(row.stage_name)}</div>
               <div class="d-row-sub mono">${escapeHtml(row.updated_at || '—')}</div>
             </td>
             <td>
               <div class="d-badge-group">
-                ${renderBadge('Foto', !!row.has_foto)}
-                ${renderBadge('Firma', !!row.has_firma)}
-                ${renderBadge('Huella', !!row.has_huella)}
+                ${renderBadge('Foto', !!row.has_photo)}
+                ${renderBadge('Firma', !!row.has_signature)}
+                ${renderBadge('Huella', !!row.has_fingerprint)}
               </div>
             </td>
             <td>
               <div class="d-actions-group">
                 <select class="d-select" data-role="status-select" ${hasTurn ? '' : 'disabled'}>
-                  ${renderStatusOptions(row.estatus_id)}
+                  ${renderStatusOptions(row.status_id)}
                 </select>
                 <button class="d-btn d-btn--primary" data-action="save-status" ${hasTurn ? '' : 'disabled'}>Guardar estatus</button>
               </div>
             </td>
             <td>
               <div class="d-actions-group">
-                <button class="d-btn d-btn--danger" data-action="clear-biometric" data-type="foto" ${hasTurn && row.has_foto ? '' : 'disabled'}>Borrar foto</button>
-                <button class="d-btn d-btn--danger" data-action="clear-biometric" data-type="firma" ${hasTurn && row.has_firma ? '' : 'disabled'}>Borrar firma</button>
-                <button class="d-btn d-btn--danger" data-action="clear-biometric" data-type="huella" ${hasTurn && row.has_huella ? '' : 'disabled'}>Borrar huella</button>
+                <button class="d-btn d-btn--danger" data-action="clear-biometric" data-type="photo" ${hasTurn && row.has_photo ? '' : 'disabled'}>Borrar foto</button>
+                <button class="d-btn d-btn--danger" data-action="clear-biometric" data-type="signature" ${hasTurn && row.has_signature ? '' : 'disabled'}>Borrar firma</button>
+                <button class="d-btn d-btn--danger" data-action="clear-biometric" data-type="fingerprint" ${hasTurn && row.has_fingerprint ? '' : 'disabled'}>Borrar huella</button>
               </div>
             </td>
           </tr>
@@ -106,12 +103,12 @@
     const updateKpis = (kpis) => {
       if (!kpis) return;
       const mapping = {
-        'kpiTotalAlumnos': kpis.total_alumnos,
-        'kpiTurnosHoy': kpis.turnos_hoy,
-        'kpiCompletadosHoy': kpis.completados_hoy,
-        'kpiFotosHoy': kpis.fotos_hoy,
-        'kpiFirmasHoy': kpis.firmas_hoy,
-        'kpiHuellasHoy': kpis.huellas_hoy
+        'kpiTotalAlumnos': kpis.total_students,
+        'kpiTurnosHoy': kpis.tickets_today,
+        'kpiCompletadosHoy': kpis.completed_today,
+        'kpiFotosHoy': kpis.photos_today,
+        'kpiFirmasHoy': kpis.signatures_today,
+        'kpiHuellasHoy': kpis.fingerprints_today
       };
 
       Object.entries(mapping).forEach(([id, value]) => {

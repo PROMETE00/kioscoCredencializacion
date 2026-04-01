@@ -62,39 +62,39 @@ class CaptureQueueModel extends Model
         $fileId = (int) $this->db->insertID();
 
         $this->db->table('students')
-            ->where('id_student', $studentId)
+            ->where('id', $studentId)
             ->update([
                 'photo_file_id' => $fileId,
                 'updated_at'    => $now,
             ]);
 
         $currentTicket = $this->db->table('tickets')
-            ->select('current_stage_id, ticket_status_id')
-            ->where('id_ticket', $ticketId)
+            ->select('stage_id, status_id')
+            ->where('id', $ticketId)
             ->get()
             ->getRowArray();
 
-        $nextStageId = $this->getStageIdByCode('photo_saved') ?? $this->getStageIdByCode('captured');
-        $statusId = $this->getStatusIdByCode('active') ?? $this->getStatusIdByCode('IN_PROGRESS');
+        $nextStageId = $this->getStageIdByCode('PHOTO_CAPTURED') ?? $this->getStageIdByCode('photo_saved') ?? $this->getStageIdByCode('captured');
+        $statusId = $this->getStatusIdByCode('WAITING') ?? $this->getStatusIdByCode('active') ?? $this->getStatusIdByCode('IN_PROGRESS');
 
         $ticketUpdate = ['updated_at' => $now];
         if ($nextStageId) {
-            $ticketUpdate['current_stage_id'] = $nextStageId;
+            $ticketUpdate['stage_id'] = $nextStageId;
         }
         if ($statusId) {
-            $ticketUpdate['ticket_status_id'] = $statusId;
+            $ticketUpdate['status_id'] = $statusId;
         }
 
         $this->db->table('tickets')
-            ->where('id_ticket', $ticketId)
+            ->where('id', $ticketId)
             ->update($ticketUpdate);
 
         $this->db->table('ticket_events')->insert([
             'ticket_id'          => $ticketId,
             'event_type'         => 'photo_saved',
-            'previous_stage_id'  => $currentTicket['current_stage_id'] ?? null,
+            'previous_stage_id'  => $currentTicket['stage_id'] ?? null,
             'new_stage_id'       => $nextStageId,
-            'previous_status_id' => $currentTicket['ticket_status_id'] ?? null,
+            'previous_status_id' => $currentTicket['status_id'] ?? null,
             'new_status_id'      => $statusId,
             'user_id'            => session('auth')['id'] ?? null,
             'details_json'       => json_encode(['file_id' => $fileId, 'path' => $relativePath], JSON_UNESCAPED_UNICODE),
@@ -116,20 +116,20 @@ class CaptureQueueModel extends Model
     private function getStageIdByCode(string $code): ?int
     {
         $row = $this->db->table('cat_stages')
-            ->select('id_stage')
+            ->select('id')
             ->where('code', $code)
             ->get(1)->getRowArray();
 
-        return $row ? (int)$row['id_stage'] : null;
+        return $row ? (int)$row['id'] : null;
     }
 
     private function getStatusIdByCode(string $code): ?int
     {
         $row = $this->db->table('cat_ticket_status')
-            ->select('id_status')
+            ->select('id')
             ->where('code', $code)
             ->get(1)->getRowArray();
 
-        return $row ? (int)$row['id_status'] : null;
+        return $row ? (int)$row['id'] : null;
     }
 }
