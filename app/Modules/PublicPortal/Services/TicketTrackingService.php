@@ -68,11 +68,11 @@ class TicketTrackingService
         }
 
         return [
-            'updated_at'     => date('d/m/Y H:i'),
-            'current_ticket' => $currentTicketSummary,
-            'total_tickets'  => count($items),
+            'actualizado_en' => date('d/m/Y H:i'),
+            'turno_actual'   => $currentTicketSummary,
+            'total_turnos'   => count($items),
             'being_served'   => $currentTicketSummary ? 1 : 0,
-            'waiting'        => max(0, count($items) - ($currentTicketSummary ? 1 : 0)),
+            'en_espera'      => max(0, count($items) - ($currentTicketSummary ? 1 : 0)),
             'items'          => $items,
         ];
     }

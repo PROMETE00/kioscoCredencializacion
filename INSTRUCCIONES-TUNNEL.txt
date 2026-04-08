@@ -1,0 +1,114 @@
+═══════════════════════════════════════════════════════════════════════════════
+  🚀 KIOSCO DE CREDENCIALIZACIÓN - CLOUDFLARE TUNNEL CONFIGURADO
+═══════════════════════════════════════════════════════════════════════════════
+
+✅ TODO ESTÁ LISTO. Solo necesitas pegar tu token de Cloudflare.
+
+═══════════════════════════════════════════════════════════════════════════════
+  📋 PASO 1: Obtén tu Cloudflare Tunnel Token
+═══════════════════════════════════════════════════════════════════════════════
+
+1. Ve a: https://one.dash.cloudflare.com/
+2. Menú lateral → Networks → Tunnels
+3. Crea un nuevo tunnel o usa uno existente
+4. Configura el Public Hostname:
+   
+   📌 Public hostname: credencializacion.prome.works
+   📌 Service Type:    HTTP
+   📌 URL:             app:80
+   
+   ⚠️  IMPORTANTE: Usa "app:80" (no localhost:3001)
+       El contenedor cloudflared habla con el contenedor app por red interna Docker.
+
+5. Copia el TUNNEL_TOKEN (empieza con "eyJ...")
+
+═══════════════════════════════════════════════════════════════════════════════
+  📝 PASO 2: Pega el Token en el archivo .env
+═══════════════════════════════════════════════════════════════════════════════
+
+Edita el archivo .env y busca la línea:
+
+CLOUDFLARE_TUNNEL_TOKEN=
+
+Pega tu token después del signo igual:
+
+CLOUDFLARE_TUNNEL_TOKEN=eyJhIjoixxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx...
+
+═══════════════════════════════════════════════════════════════════════════════
+  🐳 PASO 3: Levanta el proyecto
+═══════════════════════════════════════════════════════════════════════════════
+
+docker compose up -d --build
+
+═══════════════════════════════════════════════════════════════════════════════
+  🔍 VERIFICACIÓN
+═══════════════════════════════════════════════════════════════════════════════
+
+Ver estado de los contenedores:
+    docker compose ps
+
+Ver logs del tunnel (para confirmar conexión):
+    docker compose logs -f tunnel
+    
+    ✅ Si ves: "Connection registered" → TODO BIEN
+    ❌ Si ves: "requires the ID or name" → FALTA TOKEN EN .env
+
+Probar localmente:
+    curl http://localhost:3001
+    o abre: http://localhost:3001 en el navegador
+
+Probar por internet:
+    https://credencializacion.prome.works
+
+═══════════════════════════════════════════════════════════════════════════════
+  📊 ARQUITECTURA
+═══════════════════════════════════════════════════════════════════════════════
+
+Internet
+   ↓
+Cloudflare (credencializacion.prome.works)
+   ↓ [Cloudflare Tunnel]
+   ↓
+Contenedor: kiosco_tunnel → Contenedor: kiosco_app (puerto 80 interno)
+   ↓
+Host: localhost:3001 → Contenedor: kiosco_app
+
+═══════════════════════════════════════════════════════════════════════════════
+  🛠️  COMANDOS ÚTILES
+═══════════════════════════════════════════════════════════════════════════════
+
+Reiniciar todo:
+    docker compose restart
+
+Reiniciar solo el tunnel (después de cambiar token):
+    docker compose restart tunnel
+
+Ver logs de todos los servicios:
+    docker compose logs -f
+
+Detener todo:
+    docker compose down
+
+Limpiar y reiniciar desde cero:
+    docker compose down -v && docker compose up -d --build
+
+═══════════════════════════════════════════════════════════════════════════════
+  🎯 ACCESOS
+═══════════════════════════════════════════════════════════════════════════════
+
+🌐 Aplicación (Internet):  https://credencializacion.prome.works
+🏠 Aplicación (Local):     http://localhost:3001
+🗄️  Base de datos (Local):  localhost:3307
+    Usuario: kiosco_user
+    Password: kiosco_secret
+    
+📊 PHPMyAdmin (Local):     http://localhost:8081
+    Usuario: root
+    Password: root_secret
+
+═══════════════════════════════════════════════════════════════════════════════
+
+✨ El sistema está esperando tu token para conectar el tunnel.
+   Una vez que lo pegues en .env, solo haz: docker compose up -d
+
+═══════════════════════════════════════════════════════════════════════════════

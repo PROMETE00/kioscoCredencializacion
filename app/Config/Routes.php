@@ -10,6 +10,7 @@ use CodeIgniter\Router\RouteCollection;
 $routes->group('', ['namespace' => 'App\Modules\PublicPortal\Controllers'], static function ($routes) {
     $routes->get('/', 'TicketController::index');
     $routes->get('turno', 'TicketController::index');
+    $routes->get('turnos/general', 'TicketController::overview');
     $routes->post('turno/buscar', 'TicketController::searchStudent');
     $routes->post('turno/generar', 'TicketController::generateTicket'); // Corregido: generate -> generateTicket
 

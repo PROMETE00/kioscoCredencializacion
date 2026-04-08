@@ -175,7 +175,14 @@ class TicketController extends BaseController
         $db = \Config\Database::connect();
         $db->transStart();
 
-        $db->table('tickets')->insert([
+        // Debug logging
+        log_message('info', 'Insertando ticket con datos: ' . json_encode([
+            'student_id' => (int) $studentDb['id'],
+            'status_id' => (int) $catalogs['status_id'], 
+            'stage_id' => (int) $catalogs['stage_id']
+        ]));
+
+        $insertResult = $db->table('tickets')->insert([
             'folio'         => 'PEND',
             'student_id'    => (int) $studentDb['id'],
             'status_id'     => (int) $catalogs['status_id'],
@@ -189,8 +196,10 @@ class TicketController extends BaseController
         ]);
 
         $ticketId = (int) $db->insertID();
+        log_message('info', 'Insert result: ' . ($insertResult ? 'true' : 'false') . ', Insert ID: ' . $ticketId);
 
         if ($ticketId <= 0) {
+            log_message('error', 'Ticket ID is ' . $ticketId . ', rolling back transaction');
             $db->transRollback();
 
             return view($this->viewBase . '/generar_turno', array_merge(
@@ -415,16 +424,16 @@ class TicketController extends BaseController
         }
 
         $status = $db->table('cat_ticket_status')
-            ->where('code', 'ACTIVE')
-            ->orWhere('code', 'activo')
+            ->where('code', 'WAITING')
+            ->orWhere('code', 'EN_ESPERA')
             ->get()
             ->getRowArray();
 
         if (!$status) {
             $status = $db->table('cat_ticket_status')
                 ->groupStart()
-                    ->where('code', 'ACTIVE')
-                    ->orWhere('code', 'EN_COLA')
+                    ->where('code', 'WAITING')
+                    ->orWhere('code', 'IN_PROGRESS')
                 ->groupEnd()
                 ->orderBy('id', 'ASC')
                 ->get()
@@ -503,7 +512,24 @@ class TicketController extends BaseController
 
     private function buildFolio(int $ticketId): string
     {
-        return 'FOL-' . str_pad((string) $ticketId, 8, '0', STR_PAD_LEFT);
+        $db = \Config\Database::connect();
+        
+        // Intentar primero el folio basado en ID
+        $basefolioID = 'FOL-' . str_pad((string) $ticketId, 8, '0', STR_PAD_LEFT);
+        
+        // Verificar si ya existe
+        $exists = $db->table('tickets')
+            ->where('folio', $basefolioID)
+            ->where('id !=', $ticketId)
+            ->countAllResults();
+        
+        if ($exists == 0) {
+            return $basefolioID;
+        }
+        
+        // Si existe, generar uno basado en timestamp + ticketID
+        $timestamp = date('ymdHis');
+        return 'FOL-' . $timestamp . '-' . str_pad((string) $ticketId, 4, '0', STR_PAD_LEFT);
     }
 
     private function resolveStudentIdentifier(array $studentDb): string

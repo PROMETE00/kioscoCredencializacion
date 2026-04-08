@@ -1,0 +1,7 @@
+tunnel: credencializacion-kiosco
+credentials-file: /etc/cloudflared/credentials.json
+
+ingress:
+  - hostname: credencializacion.prome.works
+    service: http://app:80
+  - service: http_status:404

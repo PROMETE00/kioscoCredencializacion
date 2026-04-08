@@ -37,6 +37,7 @@ class AuthSeeder extends Seeder
 
         $users = [
             ['username' => 'admin',    'full_name' => 'Administrador',      'email' => null, 'pass' => $adminPassword,   'role' => 'ADMIN'],
+            ['username' => 'prome',    'full_name' => 'Administrador Prome','email' => null, 'pass' => 'Temporal1234',   'role' => 'ADMIN'],
             ['username' => 'super',    'full_name' => 'Supervisor',         'email' => null, 'pass' => $defaultPassword, 'role' => 'SUPERVISOR'],
             ['username' => 'photo',    'full_name' => 'Estación Foto',      'email' => null, 'pass' => $defaultPassword, 'role' => 'EST_PHOTO'],
             ['username' => 'signature','full_name' => 'Estación Firma',     'email' => null, 'pass' => $defaultPassword, 'role' => 'EST_SIGN'],
