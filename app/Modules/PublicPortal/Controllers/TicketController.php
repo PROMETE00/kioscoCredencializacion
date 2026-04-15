@@ -260,9 +260,164 @@ class TicketController extends BaseController
         // Mapear para la vista (que espera nombres en español)
         $viewTicket = $this->mapTicketForView($ticket);
 
+        // Store ticket data in session for the signature step
+        session()->set('pending_signature', [
+            'student_id' => (int) $studentDb['id'],
+            'ticket_id'  => $ticketId,
+            'turno'      => $viewTicket,
+        ]);
+
+        // Show signature capture page instead of QR
+        return view($this->viewBase . '/captura_firma_publica', [
+            'turno'     => $viewTicket,
+            'alumno'    => $this->mapStudentToView($studentDb, $identifier),
+            'studentId' => (int) $studentDb['id'],
+            'ticketId'  => $ticketId,
+        ]);
+    }
+
+    /**
+     * Saves a signature from the public kiosk flow (no auth required).
+     * Expects: firma_png (base64 data URL), alumno_id, turno_id via POST.
+     */
+    public function savePublicSignature()
+    {
+        $pending = session()->get('pending_signature');
+
+        if (!$pending) {
+            return redirect()->to(base_url('turno'));
+        }
+
+        $studentId    = (int) ($this->request->getPost('alumno_id') ?? 0);
+        $ticketId     = (int) ($this->request->getPost('turno_id') ?? 0);
+        $signatureB64 = (string) ($this->request->getPost('firma_png') ?? '');
+
+        // Validate that IDs match what's in session (prevent tampering)
+        if ($studentId !== (int) $pending['student_id'] || $ticketId !== (int) $pending['ticket_id']) {
+            return redirect()->to(base_url('turno'));
+        }
+
+        // If signature data is provided, save it
+        if ($signatureB64 !== '' && str_starts_with($signatureB64, 'data:image/')) {
+            try {
+                $this->saveSignatureFile($studentId, $ticketId, $signatureB64);
+            } catch (\RuntimeException $e) {
+                log_message('error', 'Public signature save failed: ' . $e->getMessage());
+                // Continue to QR even if signature fails — don't block the flow
+            }
+        }
+
+        $viewTicket = $pending['turno'];
+        session()->remove('pending_signature');
+
         return view($this->viewBase . '/turno_qr', [
             'turno' => $viewTicket,
         ]);
+    }
+
+    /**
+     * Directly saves a signature file without queue validation.
+     * Used by the public kiosk flow.
+     */
+    private function saveSignatureFile(int $studentId, int $ticketId, string $dataUrl): array
+    {
+        if (!preg_match('#^data:(image/[a-zA-Z0-9.+-]+);base64,(.+)$#', $dataUrl, $matches)) {
+            throw new \RuntimeException('El formato de la firma es inválido.');
+        }
+
+        $mime   = strtolower($matches[1]);
+        $binary = base64_decode($matches[2], true);
+
+        if ($binary === false) {
+            throw new \RuntimeException('No se pudo decodificar la firma.');
+        }
+
+        $ext = match ($mime) {
+            'image/png'  => 'png',
+            'image/jpeg' => 'jpg',
+            default      => 'png',
+        };
+
+        $relativePath = 'uploads/firmas/signature_' . $studentId . '_' . date('Ymd_His') . '_' . bin2hex(random_bytes(4)) . '.' . $ext;
+        $absolutePath = FCPATH . $relativePath;
+        $dir = dirname($absolutePath);
+
+        if (!is_dir($dir) && !mkdir($dir, 0775, true) && !is_dir($dir)) {
+            throw new \RuntimeException('No se pudo crear el directorio de firmas.');
+        }
+
+        if (file_put_contents($absolutePath, $binary) === false) {
+            throw new \RuntimeException('No se pudo guardar el archivo de firma.');
+        }
+
+        $now = date('Y-m-d H:i:s');
+        $db  = \Config\Database::connect();
+
+        $db->transStart();
+
+        // Insert file record
+        $db->table('files')->insert([
+            'type'       => 'signature',
+            'path'       => $relativePath,
+            'sha256'     => hash('sha256', $binary),
+            'mime'       => $mime,
+            'size_bytes' => filesize($absolutePath),
+            'created_at' => $now,
+        ]);
+
+        $fileId = (int) $db->insertID();
+
+        // Update student's signature reference
+        $db->table('students')
+            ->where('id', $studentId)
+            ->update([
+                'signature_file_id' => $fileId,
+                'updated_at'        => $now,
+            ]);
+
+        // Try to advance the ticket stage
+        $currentTicket = $db->table('tickets')
+            ->select('stage_id, status_id')
+            ->where('id', $ticketId)
+            ->get()
+            ->getRowArray();
+
+        $nextStageId = null;
+        foreach (['SIGNATURE_CAPTURED', 'signature_saved', 'SIGNATURE_REGISTERED', 'FIRMA_REGISTRADA'] as $code) {
+            $row = $db->table('cat_stages')->select('id')->where('code', $code)->get(1)->getRowArray();
+            if ($row) { $nextStageId = (int) $row['id']; break; }
+        }
+
+        $ticketUpdate = ['updated_at' => $now];
+        if ($nextStageId !== null) {
+            $ticketUpdate['stage_id'] = $nextStageId;
+        }
+
+        $db->table('tickets')
+            ->where('id', $ticketId)
+            ->update($ticketUpdate);
+
+        // Log event
+        $db->table('ticket_events')->insert([
+            'ticket_id'          => $ticketId,
+            'event_type'         => 'signature_saved',
+            'previous_stage_id'  => $currentTicket['stage_id'] ?? null,
+            'new_stage_id'       => $nextStageId,
+            'previous_status_id' => $currentTicket['status_id'] ?? null,
+            'new_status_id'      => $currentTicket['status_id'] ?? null,
+            'user_id'            => null, // Public kiosk, no auth user
+            'details_json'       => json_encode(['file_id' => $fileId, 'source' => 'public_kiosk'], JSON_UNESCAPED_UNICODE),
+            'created_at'         => $now,
+        ]);
+
+        $db->transComplete();
+
+        if (!$db->transStatus()) {
+            @unlink($absolutePath);
+            throw new \RuntimeException('Error al guardar la firma en la base de datos.');
+        }
+
+        return ['file_id' => $fileId, 'url' => base_url($relativePath)];
     }
 
     /**

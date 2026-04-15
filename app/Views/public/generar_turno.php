@@ -78,7 +78,7 @@
                   name="identificador"
                   type="text"
                   value="<?= esc(old('identificador') ?? ($alumno['identificador'] ?? '')) ?>"
-                  placeholder="Ej. 21160727 o 12345"
+                  placeholder="Ej. 21160727"
                   inputmode="numeric"
                   autocomplete="off"
                   autocapitalize="off"
@@ -98,7 +98,10 @@
               </button>
             </div>
           </form>
-
+          <?php
+            require_once __DIR__ . '/keyboardComponent.php';
+            echo renderKeyboard('#identificador');
+          ?>  
           <!-- RESULTADO DE LA CONSULTA -->
           <?php if ($consultaRealizada): ?>
 

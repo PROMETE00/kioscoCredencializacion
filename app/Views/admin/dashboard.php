@@ -16,19 +16,11 @@
         autocomplete="off"
       >
     </div>
-    <div class="d-subhint">La tabla se actualiza automáticamente al escribir. Se cargan 8 alumnos por consulta para mantenerla ligera.</div>
   </div>
 </div>
 
 <section class="d-main-grid d-main-grid--single">
   <div class="d-card d-worklist">
-    <div class="d-worklist__top">
-      <div>
-        <div class="d-card-title">Panel general administrativo</div>
-        <div class="d-subhint" id="dashboardMeta">Mostrando los primeros <?= esc((string) count($worklist)) ?> alumnos encontrados.</div>
-      </div>
-    </div>
-
     <div class="d-tablewrap">
       <table class="d-table">
         <thead>
@@ -77,7 +69,14 @@
               </td>
               <td>
                 <div class="d-actions-group">
-                  <button class="d-btn d-btn--danger" data-action="clear-biometric" data-type="photo" <?= !empty($r['ticket_id']) && !empty($r['has_photo']) ? '' : 'disabled' ?>>Borrar foto</button>
+                  <button 
+                    class="d-btn d-btn--danger btn-icon" 
+                    data-action="clear-biometric" 
+                    data-type="photo"
+                    <?= !empty($r['ticket_id']) && !empty($r['has_photo']) ? '' : 'disabled' ?>
+                  >
+                    <img src="/assets/img/deleteUserPhoto.png" alt="Borrar foto">
+                  </button>
                   <button class="d-btn d-btn--danger" data-action="clear-biometric" data-type="signature" <?= !empty($r['ticket_id']) && !empty($r['has_signature']) ? '' : 'disabled' ?>>Borrar firma</button>
                   <button class="d-btn d-btn--danger" data-action="clear-biometric" data-type="fingerprint" <?= !empty($r['ticket_id']) && !empty($r['has_fingerprint']) ? '' : 'disabled' ?>>Borrar huella</button>
                 </div>
