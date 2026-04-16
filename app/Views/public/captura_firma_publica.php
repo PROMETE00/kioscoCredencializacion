@@ -37,18 +37,50 @@
 <main class="pt-main">
   <div class="pt-container">
     <section class="pt-shell">
-      <div class="pt-grid pt-grid--firma">
+      <div class="pt-firma-layout">
 
-        <!-- LEFT: Signature canvas -->
         <div class="pt-panel pt-panel--main">
           <div class="pt-kicker">Paso 2 de 2</div>
-          <h2 class="pt-title">Captura tu firma</h2>
+          <h2 class="pt-title">Verifica tus datos y captura tu firma</h2>
           <p class="pt-text">
-            Firma con tu <strong>dedo</strong> en el recuadro de abajo. Esta firma será utilizada en tu credencial.
+            Revisa que tu información sea correcta, confirma tus datos y firma con tu <strong>dedo</strong> en el recuadro.
           </p>
 
-          <!-- Canvas -->
-          <div class="pt-firma-wrap" id="firmaWrap">
+          <!-- ── Student & Ticket info ── -->
+          <div class="pt-firma-info-row">
+            <div class="pt-info-card">
+              <div class="pt-info-card__title">Datos del alumno</div>
+              <div class="pt-info-list">
+                <div><span>Nombre</span><strong><?= esc($alumno['nombre'] ?? 'N/A') ?></strong></div>
+                <div><span>No. control / ficha</span><strong><?= esc($alumno['identificador'] ?? 'N/A') ?></strong></div>
+                <div><span>Carrera</span><strong><?= esc($alumno['carrera'] ?? 'N/A') ?></strong></div>
+                <div><span>Campus</span><strong><?= esc($alumno['campus'] ?? 'N/A') ?></strong></div>
+              </div>
+            </div>
+
+            <div class="pt-info-card">
+              <div class="pt-info-card__title">Turno generado</div>
+              <div class="pt-info-list">
+                <div><span>Folio</span><strong><?= esc($turno['folio'] ?? 'N/A') ?></strong></div>
+                <div><span>Estatus</span><strong><?= esc($turno['estatus'] ?? 'N/A') ?></strong></div>
+                <div><span>Etapa</span><strong><?= esc($turno['etapa'] ?? 'N/A') ?></strong></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ── Mandatory confirmation ── -->
+          <label class="pt-confirm" id="confirmLabel">
+            <input type="checkbox" id="confirmCheck">
+            <span class="pt-confirm__box">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            </span>
+            <span class="pt-confirm__text">
+              Confirmo que mis datos son <strong>correctos</strong> y acepto que mi firma será utilizada en la credencial.
+            </span>
+          </label>
+
+          <!-- ── Canvas (disabled until confirmed) ── -->
+          <div class="pt-firma-wrap pt-firma-wrap--locked" id="firmaWrap">
             <canvas id="firmaCanvas"></canvas>
             <div class="pt-firma-placeholder" id="firmaPlaceholder">
               <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
@@ -57,7 +89,11 @@
                 <path d="M2 2l7.586 7.586"/>
                 <circle cx="11" cy="11" r="2"/>
               </svg>
-              <span>Toca aquí y dibuja tu firma</span>
+              <span id="placeholderText">Primero confirma tus datos para poder firmar</span>
+            </div>
+            <div class="pt-firma-lock-overlay" id="firmaLock">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+              <span>Confirma tus datos arriba para desbloquear</span>
             </div>
           </div>
 
@@ -69,7 +105,7 @@
           </div>
 
           <div id="firmaStatus" class="pt-firma-status">
-            Dibuja tu firma para continuar.
+            Confirma tus datos y dibuja tu firma para continuar.
           </div>
 
           <!-- Form to submit -->
@@ -83,40 +119,13 @@
               <button type="submit" id="btnGuardar" class="pt-btn pt-btn--success" disabled>
                 Guardar firma y continuar
               </button>
-              <button type="submit" id="btnOmitir" class="pt-btn pt-btn--secondary pt-btn--auto pt-btn--skip">
-                Omitir firma →
-              </button>
             </div>
           </form>
-        </div>
 
-        <!-- RIGHT: Student info summary -->
-        <aside class="pt-panel">
-          <h3 class="pt-side-title">Datos del turno</h3>
-
-          <div class="pt-info-card">
-            <div class="pt-info-card__title">Alumno</div>
-            <div class="pt-info-list">
-              <div><span>Nombre</span><strong><?= esc($alumno['nombre'] ?? 'N/A') ?></strong></div>
-              <div><span>No. control / ficha</span><strong><?= esc($alumno['identificador'] ?? 'N/A') ?></strong></div>
-              <div><span>Carrera</span><strong><?= esc($alumno['carrera'] ?? 'N/A') ?></strong></div>
-              <div><span>Campus</span><strong><?= esc($alumno['campus'] ?? 'N/A') ?></strong></div>
-            </div>
-          </div>
-
-          <div class="pt-info-card">
-            <div class="pt-info-card__title">Turno generado</div>
-            <div class="pt-info-list">
-              <div><span>Folio</span><strong><?= esc($turno['folio'] ?? 'N/A') ?></strong></div>
-              <div><span>Estatus</span><strong><?= esc($turno['estatus'] ?? 'N/A') ?></strong></div>
-              <div><span>Etapa</span><strong><?= esc($turno['etapa'] ?? 'N/A') ?></strong></div>
-            </div>
-          </div>
-
-          <div class="pt-note" style="margin-top:12px;">
+          <div class="pt-note" style="margin-top:14px;">
             Tu firma se guardará de forma segura y será utilizada únicamente para la credencial.
           </div>
-        </aside>
+        </div>
 
       </div>
     </section>
@@ -129,11 +138,125 @@
 </footer>
 
 <style>
-/* ── Signature capture (public kiosk) ────────────── */
-.pt-grid--firma {
-  grid-template-columns: minmax(0, 1.6fr) minmax(280px, .6fr);
+/* ── Signature capture layout (single column) ──── */
+.pt-firma-layout {
+  max-width: 720px;
+  margin: 0 auto;
 }
 
+/* ── Info cards row ── */
+.pt-firma-info-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.pt-info-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.pt-info-list > div {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.pt-info-list > div:last-child {
+  border-bottom: 0;
+}
+
+.pt-info-list span {
+  color: var(--pt-muted, #6b7280);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.pt-info-list strong {
+  color: var(--pt-text-strong, #111827);
+  font-size: 13px;
+  font-weight: 800;
+  text-align: right;
+}
+
+/* ── Confirmation checkbox ── */
+.pt-confirm {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-top: 18px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  border: 2px solid var(--pt-input-border, #dbe4ef);
+  background: #f8fbff;
+  cursor: pointer;
+  transition: border-color .2s ease, background .2s ease, box-shadow .2s ease;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.pt-confirm:hover {
+  border-color: rgba(47, 109, 246, .35);
+  background: #f0f6ff;
+}
+
+.pt-confirm.is-checked {
+  border-color: rgba(22, 163, 74, .4);
+  background: rgba(22, 163, 74, .05);
+  box-shadow: 0 0 0 3px rgba(22, 163, 74, .08);
+}
+
+.pt-confirm input[type="checkbox"] {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.pt-confirm__box {
+  flex-shrink: 0;
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  border: 2px solid #cbd5e1;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background .15s ease, border-color .15s ease, transform .1s ease;
+  margin-top: 1px;
+}
+
+.pt-confirm__box svg {
+  opacity: 0;
+  transform: scale(.5);
+  transition: opacity .15s ease, transform .15s ease;
+  color: #fff;
+}
+
+.pt-confirm.is-checked .pt-confirm__box {
+  background: #16a34a;
+  border-color: #16a34a;
+  transform: scale(1.05);
+}
+
+.pt-confirm.is-checked .pt-confirm__box svg {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.pt-confirm__text {
+  color: #374151;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.45;
+}
+
+/* ── Canvas wrapper ── */
 .pt-firma-wrap {
   position: relative;
   margin-top: 16px;
@@ -143,7 +266,13 @@
   overflow: hidden;
   touch-action: none;
   cursor: crosshair;
-  transition: border-color .2s ease, box-shadow .2s ease;
+  transition: border-color .2s ease, box-shadow .2s ease, opacity .2s ease;
+}
+
+.pt-firma-wrap--locked {
+  cursor: not-allowed;
+  opacity: .55;
+  pointer-events: none;
 }
 
 .pt-firma-wrap.is-active {
@@ -182,6 +311,30 @@
   opacity: 0;
 }
 
+/* Lock overlay */
+.pt-firma-lock-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: #94a3b8;
+  font-size: 13px;
+  font-weight: 700;
+  background: rgba(248, 250, 252, .85);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+  transition: opacity .25s ease;
+  pointer-events: none;
+}
+
+.pt-firma-wrap--unlocked .pt-firma-lock-overlay {
+  opacity: 0;
+  pointer-events: none;
+}
+
 .pt-firma-actions {
   margin-top: 12px;
   display: flex;
@@ -211,61 +364,17 @@
   flex: 1;
 }
 
-.pt-btn--skip {
-  opacity: .7;
-  font-size: 13px;
-}
-
-.pt-btn--skip:hover {
-  opacity: 1;
-}
-
-.pt-info-list {
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-}
-
-.pt-info-list > div {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 12px;
-  padding: 10px 0;
-  border-bottom: 1px solid #f1f5f9;
-}
-
-.pt-info-list > div:last-child {
-  border-bottom: 0;
-}
-
-.pt-info-list span {
-  color: var(--pt-muted, #6b7280);
-  font-size: 13px;
-  font-weight: 700;
-}
-
-.pt-info-list strong {
-  color: var(--pt-text-strong, #111827);
-  font-size: 13px;
-  font-weight: 800;
-  text-align: right;
-}
-
-/* Touch devices: bigger canvas */
+/* ── Responsive ── */
 @media (pointer: coarse) {
   #firmaCanvas {
     height: 280px;
   }
 }
 
-@media (max-width: 960px) {
-  .pt-grid--firma {
+@media (max-width: 640px) {
+  .pt-firma-info-row {
     grid-template-columns: 1fr;
   }
-}
-
-@media (max-width: 640px) {
   #firmaCanvas {
     height: 200px;
   }
@@ -276,22 +385,26 @@
 (() => {
   const canvas      = document.getElementById('firmaCanvas');
   const wrap        = document.getElementById('firmaWrap');
+  const lockOverlay = document.getElementById('firmaLock');
   const placeholder = document.getElementById('firmaPlaceholder');
+  const placeholderText = document.getElementById('placeholderText');
   const btnLimpiar  = document.getElementById('btnLimpiar');
   const btnGuardar  = document.getElementById('btnGuardar');
-  const btnOmitir   = document.getElementById('btnOmitir');
   const hiddenInput = document.getElementById('firmaPngInput');
   const statusEl    = document.getElementById('firmaStatus');
   const form        = document.getElementById('firmaForm');
+  const confirmCheck = document.getElementById('confirmCheck');
+  const confirmLabel = document.getElementById('confirmLabel');
 
-  if (!canvas || !wrap || !btnLimpiar || !btnGuardar || !hiddenInput || !form) return;
+  if (!canvas || !wrap || !btnLimpiar || !btnGuardar || !hiddenInput || !form || !confirmCheck) return;
 
   const ctx = canvas.getContext('2d');
-  let drawing = false;
-  let last    = null;
-  let hasInk  = false;
+  let drawing  = false;
+  let last     = null;
+  let hasInk   = false;
+  let unlocked = false;
 
-  /* ── Resize canvas to match CSS size ── */
+  /* ── Resize canvas ── */
   function resize() {
     const dpr  = window.devicePixelRatio || 1;
     const rect = canvas.getBoundingClientRect();
@@ -312,7 +425,9 @@
     wrap.classList.remove('has-ink', 'is-active');
     btnGuardar.disabled = true;
     hiddenInput.value = '';
-    statusEl.textContent = 'Dibuja tu firma para continuar.';
+    if (unlocked) {
+      statusEl.textContent = 'Dibuja tu firma para continuar.';
+    }
   }
 
   function pos(e) {
@@ -324,8 +439,32 @@
     };
   }
 
+  /* ── Confirmation checkbox ── */
+  confirmCheck.addEventListener('change', () => {
+    const checked = confirmCheck.checked;
+    confirmLabel.classList.toggle('is-checked', checked);
+
+    if (checked) {
+      unlocked = true;
+      wrap.classList.remove('pt-firma-wrap--locked');
+      wrap.classList.add('pt-firma-wrap--unlocked');
+      wrap.style.opacity = '';
+      wrap.style.pointerEvents = '';
+      placeholderText.textContent = 'Toca aquí y dibuja tu firma';
+      statusEl.textContent = 'Datos confirmados ✓ — Dibuja tu firma para continuar.';
+    } else {
+      unlocked = false;
+      wrap.classList.add('pt-firma-wrap--locked');
+      wrap.classList.remove('pt-firma-wrap--unlocked');
+      resetPad();
+      btnLimpiar.disabled = true;
+      statusEl.textContent = 'Confirma tus datos para poder firmar.';
+    }
+  });
+
   /* ── Drawing events ── */
   function down(e) {
+    if (!unlocked) return;
     drawing = true;
     last = pos(e);
     wrap.classList.add('is-active');
@@ -333,7 +472,7 @@
   }
 
   function move(e) {
-    if (!drawing) return;
+    if (!drawing || !unlocked) return;
     const p = pos(e);
     ctx.beginPath();
     ctx.moveTo(last.x, last.y);
@@ -355,7 +494,7 @@
     drawing = false;
     last = null;
     wrap.classList.remove('is-active');
-    e.preventDefault();
+    if (e.cancelable) e.preventDefault();
   }
 
   canvas.addEventListener('pointerdown', down);
@@ -371,21 +510,20 @@
     btnLimpiar.disabled = true;
   });
 
-  /* Before form submit, serialize canvas to hidden input */
+  /* ── Form submit ── */
   form.addEventListener('submit', (e) => {
-    // If skipping (no ink), submit with empty firma_png
-    if (e.submitter === btnOmitir) {
-      hiddenInput.value = '';
-      statusEl.textContent = 'Omitiendo firma...';
-      return; // let form submit normally
+    if (!unlocked) {
+      e.preventDefault();
+      statusEl.textContent = 'Debes confirmar que tus datos son correctos antes de continuar.';
+      confirmLabel.style.animation = 'shake .4s ease';
+      setTimeout(() => confirmLabel.style.animation = '', 400);
+      return;
     }
 
-    // If saving, serialize
     if (hasInk) {
       hiddenInput.value = canvas.toDataURL('image/png');
       statusEl.textContent = 'Guardando firma...';
       btnGuardar.disabled = true;
-      btnOmitir.disabled = true;
     } else {
       e.preventDefault();
       statusEl.textContent = 'Dibuja tu firma antes de guardar.';

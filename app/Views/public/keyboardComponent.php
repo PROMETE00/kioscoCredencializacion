@@ -1,12 +1,4 @@
 <?php
-/**
- * Numeric Keyboard Component for Kiosk
- * Renders a touch-friendly numeric keypad that types into a target <input>.
- * Includes a toggle to switch between numbers and letters.
- *
- * @param string $targetInput  CSS selector of the input to receive keystrokes (default: '#identificador')
- * @param string $id           Wrapper element id (default: 'numpad')
- */
 function renderKeyboard(string $targetInput = '#identificador', string $id = 'numpad')
 {
     ob_start();

@@ -34,9 +34,18 @@
       {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[char]
     ));
 
-    const renderBadge = (label, ready) => `
-      <span class="d-badge ${ready ? 'd-badge--success' : 'd-badge--muted'}">${escapeHtml(label)}</span>
-    `;
+    const renderChecklistItem = (label, ready) => {
+      const icon = ready 
+        ? `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`
+        : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/></svg>`;
+        
+      return `
+        <div class="d-checklist-item ${ready ? 'is-ready' : ''}">
+          <div class="d-checklist-icon">${icon}</div>
+          <span>${escapeHtml(label)}</span>
+        </div>
+      `;
+    };
 
     const renderStatusOptions = (selectedId) => statusOptions.map((option) => `
       <option value="${option.id}" ${Number(option.id) === Number(selectedId) ? 'selected' : ''}>
@@ -68,25 +77,31 @@
               <div class="d-row-sub mono">${escapeHtml(row.updated_at || '—')}</div>
             </td>
             <td>
-              <div class="d-badge-group">
-                ${renderBadge('Foto', !!row.has_photo)}
-                ${renderBadge('Firma', !!row.has_signature)}
-                ${renderBadge('Huella', !!row.has_fingerprint)}
+              <div class="d-checklist">
+                ${renderChecklistItem('Foto', !!row.has_photo)}
+                ${renderChecklistItem('Firma', !!row.has_signature)}
+                ${renderChecklistItem('Huella', !!row.has_fingerprint)}
               </div>
             </td>
-            <td>
+            <!-- <td>
               <div class="d-actions-group">
                 <select class="d-select" data-role="status-select" ${hasTurn ? '' : 'disabled'}>
                   ${renderStatusOptions(row.status_id)}
                 </select>
                 <button class="d-btn d-btn--primary" data-action="save-status" ${hasTurn ? '' : 'disabled'}>Guardar estatus</button>
               </div>
-            </td>
+            </td> -->
             <td>
-              <div class="d-actions-group">
-                <button class="d-btn d-btn--danger" data-action="clear-biometric" data-type="photo" ${hasTurn && row.has_photo ? '' : 'disabled'}>Borrar foto</button>
-                <button class="d-btn d-btn--danger" data-action="clear-biometric" data-type="signature" ${hasTurn && row.has_signature ? '' : 'disabled'}>Borrar firma</button>
-                <button class="d-btn d-btn--danger" data-action="clear-biometric" data-type="fingerprint" ${hasTurn && row.has_fingerprint ? '' : 'disabled'}>Borrar huella</button>
+              <div class="d-actions-column">
+                <button class="d-btn d-btn--danger" data-action="clear-biometric" data-type="photo" ${hasTurn && row.has_photo ? '' : 'disabled'}>
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="pointer-events: none;"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg> Borrar foto
+                </button>
+                <button class="d-btn d-btn--danger" data-action="clear-biometric" data-type="signature" ${hasTurn && row.has_signature ? '' : 'disabled'}>
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="pointer-events: none;"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg> Borrar firma
+                </button>
+                <button class="d-btn d-btn--danger" data-action="clear-biometric" data-type="fingerprint" ${hasTurn && row.has_fingerprint ? '' : 'disabled'}>
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="pointer-events: none;"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg> Borrar huella
+                </button>
               </div>
             </td>
           </tr>

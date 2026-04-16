@@ -10,7 +10,7 @@ use CodeIgniter\Model;
 class UserAdminModel extends Model
 {
     protected $table      = 'users';
-    protected $primaryKey = 'id_user';
+    protected $primaryKey = 'id';
     protected $returnType = 'array';
     protected $useTimestamps = true;
     protected $allowedFields = [
@@ -22,9 +22,9 @@ class UserAdminModel extends Model
      */
     public function listWithRoles(): array
     {
-        return $this->select('users.id_user, users.username, users.full_name, users.email, users.is_active, users.created_at, roles.code as role_code, roles.name as role_name')
-            ->join('roles', 'roles.id_role = users.role_id', 'left')
-            ->orderBy('users.id_user', 'DESC')
+        return $this->select('users.id, users.username as usuario, users.full_name as nombre, users.email, users.is_active as activo, users.created_at, roles.code as rol_codigo, roles.name as rol_nombre')
+            ->join('roles', 'roles.id = users.role_id', 'left')
+            ->orderBy('users.id', 'DESC')
             ->findAll();
     }
 

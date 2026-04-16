@@ -12,6 +12,6 @@ class RoleModel extends Model
 
     public function listAll(): array
     {
-        return $this->orderBy('nombre', 'ASC')->findAll();
+        return $this->orderBy('name', 'ASC')->findAll();
     }
 }
