@@ -491,10 +491,12 @@
   }
 
   function up(e) {
+    if (drawing){
+      if (e.cancelable) e.preventDefault();
+    }
     drawing = false;
     last = null;
     wrap.classList.remove('is-active');
-    if (e.cancelable) e.preventDefault();
   }
 
   canvas.addEventListener('pointerdown', down);

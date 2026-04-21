@@ -202,7 +202,7 @@
           <div class="pt-info-card">
             <div class="pt-info-card__title">Antes de comenzar</div>
             <ul class="pt-list">
-              <li>Verifica que tu número sea correcto.</li>
+              <li>Verifica que tu número de control o ficha sea correcto.</li>
               <li>Ten tu celular disponible para guardar el QR.</li>
               <li>Consulta tu turno cuando seas llamado al módulo.</li>
             </ul>

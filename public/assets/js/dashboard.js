@@ -66,43 +66,29 @@
         const hasTurn = Number(row.ticket_id) > 0;
         return `
           <tr data-alumno-id="${row.student_id}" data-turno-id="${row.ticket_id || ''}">
-            <td>
-              <div class="d-row-title">${escapeHtml(row.name)}</div>
-              <div class="d-row-sub mono">${escapeHtml(row.identifier)}</div>
-              <div class="d-row-sub">${escapeHtml(row.career)} · ${escapeHtml(row.campus)}</div>
-            </td>
-            <td>
-              <div class="d-row-title">${escapeHtml(row.folio || 'Sin turno activo')}</div>
-              <div class="d-row-sub">${escapeHtml(row.stage_name)}</div>
-              <div class="d-row-sub mono">${escapeHtml(row.updated_at || '—')}</div>
-            </td>
-            <td>
-              <div class="d-checklist">
-                ${renderChecklistItem('Foto', !!row.has_photo)}
-                ${renderChecklistItem('Firma', !!row.has_signature)}
-                ${renderChecklistItem('Huella', !!row.has_fingerprint)}
-              </div>
-            </td>
-            <!-- <td>
-              <div class="d-actions-group">
-                <select class="d-select" data-role="status-select" ${hasTurn ? '' : 'disabled'}>
-                  ${renderStatusOptions(row.status_id)}
-                </select>
-                <button class="d-btn d-btn--primary" data-action="save-status" ${hasTurn ? '' : 'disabled'}>Guardar estatus</button>
-              </div>
-            </td> -->
-            <td>
-              <div class="d-actions-column">
-                <button class="d-btn d-btn--danger" data-action="clear-biometric" data-type="photo" ${hasTurn && row.has_photo ? '' : 'disabled'}>
-                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="pointer-events: none;"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg> Borrar foto
-                </button>
-                <button class="d-btn d-btn--danger" data-action="clear-biometric" data-type="signature" ${hasTurn && row.has_signature ? '' : 'disabled'}>
-                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="pointer-events: none;"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg> Borrar firma
-                </button>
-                <button class="d-btn d-btn--danger" data-action="clear-biometric" data-type="fingerprint" ${hasTurn && row.has_fingerprint ? '' : 'disabled'}>
-                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="pointer-events: none;"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg> Borrar huella
+            <td class="mono">${escapeHtml(row.identifier)}</td>
+            <td>SD/CURP</td>
+            <td>${escapeHtml(row.name)}</td>
+            <td><small>${escapeHtml(row.career)}</small></td>
+            <td><small>${escapeHtml(row.campus)}</small></td>
+            <td style="text-align: center;">
+              <div style="display: flex; gap: 4px; align-items: center; justify-content: center;">
+                ${row.has_photo ? '<span style="color: #10B981; font-weight: bold;">✓</span>' : '<span style="color: #9CA3AF;">—</span>'}
+                <button type="button" class="d-btn d-btn--danger" style="padding: 4px; min-width: unset; height: auto;" data-action="clear-biometric" data-type="photo" ${hasTurn && row.has_photo ? '' : 'disabled'} title="Borrar foto">
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="pointer-events: none;"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
                 </button>
               </div>
+            </td>
+            <td style="text-align: center;">
+              <div style="display: flex; gap: 4px; align-items: center; justify-content: center;">
+                ${row.has_signature ? '<span style="color: #10B981; font-weight: bold;">✓</span>' : '<span style="color: #9CA3AF;">—</span>'}
+                <button type="button" class="d-btn d-btn--danger" style="padding: 4px; min-width: unset; height: auto;" data-action="clear-biometric" data-type="signature" ${hasTurn && row.has_signature ? '' : 'disabled'} title="Borrar firma">
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="pointer-events: none;"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                </button>
+              </div>
+            </td>
+            <td style="text-align: center;">
+              <a href="${new URL(`/admin/credencial/imprimir/${row.student_id}`, window.location.origin).toString()}" target="_blank" class="d-btn d-btn--primary" style="padding: 6px 10px; font-size: 13px; white-space: nowrap;">🖨️ Imprimir</a>
             </td>
           </tr>
         `;
