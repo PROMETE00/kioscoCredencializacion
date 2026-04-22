@@ -22,14 +22,9 @@
       <a href="<?= base_url('turno') ?>" class="pt-brand pt-brand--link" aria-label="Ir al inicio público">
         <h1 class="pt-brand__title">Instituto Tecnológico de Oaxaca</h1>
         <div class="pt-brand__subtitle">
-          Sistema de turnos para credencialización
+          Autoservicio de credencialización
         </div>
       </a>
-    </div>
-    <div class="pt-header__right">
-      <div class="pt-badge">
-        Folio: <?= esc($turno['folio'] ?? 'N/A') ?>
-      </div>
     </div>
   </div>
 </header>
@@ -46,24 +41,15 @@
             Revisa que tu información sea correcta, confirma tus datos y firma con tu <strong>dedo</strong> en el recuadro.
           </p>
 
-          <!-- ── Student & Ticket info ── -->
+          <!-- ── Student info ── -->
           <div class="pt-firma-info-row">
             <div class="pt-info-card">
               <div class="pt-info-card__title">Datos del alumno</div>
-              <div class="pt-info-list">
-                <div><span>Nombre</span><strong><?= esc($alumno['nombre'] ?? 'N/A') ?></strong></div>
-                <div><span>No. control / ficha</span><strong><?= esc($alumno['identificador'] ?? 'N/A') ?></strong></div>
-                <div><span>Carrera</span><strong><?= esc($alumno['carrera'] ?? 'N/A') ?></strong></div>
-                <div><span>Campus</span><strong><?= esc($alumno['campus'] ?? 'N/A') ?></strong></div>
-              </div>
-            </div>
-
-            <div class="pt-info-card">
-              <div class="pt-info-card__title">Turno generado</div>
-              <div class="pt-info-list">
-                <div><span>Folio</span><strong><?= esc($turno['folio'] ?? 'N/A') ?></strong></div>
-                <div><span>Estatus</span><strong><?= esc($turno['estatus'] ?? 'N/A') ?></strong></div>
-                <div><span>Etapa</span><strong><?= esc($turno['etapa'] ?? 'N/A') ?></strong></div>
+              <div class="pt-info-list" style="display:grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div style="flex-direction: column; align-items:flex-start; gap: 4px; border: none; padding:0;"><span>Nombre</span><strong><?= esc($alumno['nombre'] ?? 'N/A') ?></strong></div>
+                <div style="flex-direction: column; align-items:flex-start; gap: 4px; border: none; padding:0;"><span>No. control / ficha</span><strong><?= esc($alumno['identificador'] ?? 'N/A') ?></strong></div>
+                <div style="flex-direction: column; align-items:flex-start; gap: 4px; border: none; padding:0;"><span>Carrera</span><strong><?= esc($alumno['carrera'] ?? 'N/A') ?></strong></div>
+                <div style="flex-direction: column; align-items:flex-start; gap: 4px; border: none; padding:0;"><span>Campus</span><strong><?= esc($alumno['campus'] ?? 'N/A') ?></strong></div>
               </div>
             </div>
           </div>

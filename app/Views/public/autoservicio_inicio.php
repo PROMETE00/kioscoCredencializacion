@@ -27,7 +27,7 @@
       <a href="<?= base_url('turno') ?>" class="pt-brand pt-brand--link" aria-label="Ir al inicio público">
         <h1 class="pt-brand__title">Instituto Tecnológico de Oaxaca</h1>
         <div class="pt-brand__subtitle">
-          Sistema de turnos para credencialización
+          Autoservicio de credencialización
         </div>
       </a>
     </div>
@@ -46,14 +46,14 @@
       <div class="pt-grid">
 
         <div class="pt-panel pt-panel--main">
-          <div class="pt-kicker">Turnero digital</div>
+          <div class="pt-kicker">Autoservicio</div>
 
-          <h2 class="pt-title">Generar turno</h2>
+          <h2 class="pt-title">Iniciar proceso</h2>
 
           <p class="pt-text">
             1.- Ingresa tu <strong>No. de control</strong> o <strong>No. de ficha</strong>.<br>
             2.- <strong>Verifica</strong> que tus datos estén <strong>correctos</strong>.<br>
-            3.- Genera tu turno y <strong>guarda el QR o identificador</strong> para seguimiento.
+            3.- Continúa para registrar y <strong>capturar tu firma</strong> táctil.
           </p>
 
           <?php if (!empty($error)): ?>
@@ -146,13 +146,27 @@
                 <?php if ($turnoExistente): ?>
                   <div class="pt-existing-turn">
                     <div class="pt-existing-turn__title">
-                      Ya existe un turno con estos datos
+                      Ya iniciaste un proceso hoy
                     </div>
                     <div class="pt-existing-turn__text">
-                      Identificador del turno:
-                      <strong><?= esc($turnoActual['folio'] ?? $turnoActual['identificador'] ?? 'N/A') ?></strong>
+                      Por favor presiona el botón para continuar y capturar tu firma.
                     </div>
                   </div>
+                  <!-- FORMULARIO PARA CONTINUAR -->
+                  <form method="post" action="<?= base_url('turno/generar') ?>" class="pt-generate-form">
+                    <?= csrf_field() ?>
+
+                    <input type="hidden" name="identificador" value="<?= esc($alumno['identificador'] ?? '') ?>">
+                    <input type="hidden" name="nombre" value="<?= esc($alumno['nombre'] ?? '') ?>">
+                    <input type="hidden" name="carrera" value="<?= esc($alumno['carrera'] ?? '') ?>">
+                    <input type="hidden" name="campus" value="<?= esc($alumno['campus'] ?? '') ?>">
+
+                    <div class="pt-actions">
+                      <button class="pt-btn pt-btn--success" type="submit">
+                        Continuar
+                      </button>
+                    </div>
+                  </form>
                 <?php else: ?>
                   <!-- FORMULARIO PARA GENERAR TURNO -->
                   <form method="post" action="<?= base_url('turno/generar') ?>" class="pt-generate-form">
@@ -165,7 +179,7 @@
 
                     <div class="pt-actions">
                       <button class="pt-btn pt-btn--success" type="submit">
-                        Generar turno
+                        Continuar
                       </button>
                     </div>
                   </form>
@@ -182,8 +196,7 @@
           <?php endif; ?>
 
           <div class="pt-note">
-            * Tu turno expira al final del día. Guarda el QR o el enlace que se mostrará
-            al finalizar el registro.
+            * El acceso a tu registro expira al final del día. Debes completar la captura el día de hoy.
           </div>
         </div>
 
@@ -191,11 +204,11 @@
           <h3 class="pt-side-title">Información importante</h3>
 
           <div class="pt-info-card">
-            <div class="pt-info-card__title">¿Qué obtendrás?</div>
+            <div class="pt-info-card__title">¿Qué realizarás aquí?</div>
             <ul class="pt-list">
-              <li>Un folio de atención.</li>
-              <li>Un código QR para seguimiento.</li>
-              <li>Consulta del estado del trámite desde tu celular.</li>
+              <li>Identificación como alumno del Instituto.</li>
+              <li>Validación de datos en sistema.</li>
+              <li>Captura de firma para tu credencial oficial.</li>
             </ul>
           </div>
 
@@ -203,28 +216,8 @@
             <div class="pt-info-card__title">Antes de comenzar</div>
             <ul class="pt-list">
               <li>Verifica que tu número de control o ficha sea correcto.</li>
-              <li>Ten tu celular disponible para guardar el QR.</li>
-              <li>Consulta tu turno cuando seas llamado al módulo.</li>
+              <li>Una vez verificados los datos, procede a capturar tu firma.</li>
             </ul>
-          </div>
-            <div class="pt-info-card">
-            <div class="pt-callout__content">
-              <div class="pt-info-card__title">Consulta primero la pantalla general de turnos</div>
-              <div class="pt-callout__text">
-                <ul class="pt-list">
-                <li>Turnos vigentes: <strong><?= esc((string) ($vistaGeneral['total_turnos'] ?? 0)) ?></strong>.</li>
-                <li>En espera: <strong><?= esc((string) ($vistaGeneral['en_espera'] ?? 0)) ?></strong>.</li>
-                <?php if (!empty($vistaGeneral['turno_actual']['folio'])): ?>
-                <li>  En atención ahora: <strong><?= esc($vistaGeneral['turno_actual']['folio']) ?></strong>.</li>
-                <?php endif; ?>
-                </ul>
-              </div>
-            </div>
-            <div class="pt-callout__actions">
-              <a href="<?= base_url('turnos/general') ?>" class="pt-btn pt-btn--secondary">
-                Ver turnos
-              </a>
-            </div>
           </div>
         </aside>
 

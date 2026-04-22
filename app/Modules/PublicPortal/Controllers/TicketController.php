@@ -21,7 +21,7 @@ class TicketController extends BaseController
      */
     public function index()
     {
-        return view($this->viewBase . '/generar_turno', array_merge(
+        return view($this->viewBase . '/autoservicio_inicio', array_merge(
             $this->baseViewData(),
             [
                 'vistaGeneral' => $this->trackingService()->getOverview(),
@@ -51,7 +51,7 @@ class TicketController extends BaseController
         ];
 
         if (!$this->validate($rules)) {
-            return view($this->viewBase . '/generar_turno', array_merge(
+            return view($this->viewBase . '/autoservicio_inicio', array_merge(
                 $this->baseViewData(),
                 [
                     'error' => 'Escribe tu No. de control o No. de ficha.',
@@ -62,7 +62,7 @@ class TicketController extends BaseController
         $studentDb = $this->searchStudentByIdentifier($identifier);
 
         if (!$studentDb) {
-            return view($this->viewBase . '/generar_turno', array_merge(
+            return view($this->viewBase . '/autoservicio_inicio', array_merge(
                 $this->baseViewData(),
                 [
                     'consultaRealizada' => true,
@@ -76,7 +76,7 @@ class TicketController extends BaseController
 
         $currentTicket = $this->searchActiveTicketByStudent((int) $studentDb['id']);
 
-        return view($this->viewBase . '/generar_turno', array_merge(
+        return view($this->viewBase . '/autoservicio_inicio', array_merge(
             $this->baseViewData(),
             [
                 'consultaRealizada' => true,
@@ -97,7 +97,7 @@ class TicketController extends BaseController
         // Rate limiting básico (prevenir doble clic o spam automatizado)
         $lastRequest = session()->get('last_ticket_request_time') ?? 0;
         if (time() - $lastRequest < 3) {
-            return view($this->viewBase . '/generar_turno', array_merge(
+            return view($this->viewBase . '/autoservicio_inicio', array_merge(
                 $this->baseViewData(),
                 ['error' => 'Por favor, espera unos segundos antes de intentar nuevamente.']
             ));
@@ -111,7 +111,7 @@ class TicketController extends BaseController
         ];
 
         if (!$this->validate($rules)) {
-            return view($this->viewBase . '/generar_turno', array_merge(
+            return view($this->viewBase . '/autoservicio_inicio', array_merge(
                 $this->baseViewData(),
                 [
                     'error' => 'Identificador inválido.',
@@ -122,7 +122,7 @@ class TicketController extends BaseController
         $studentDb = $this->searchStudentByIdentifier($identifier);
 
         if (!$studentDb) {
-            return view($this->viewBase . '/generar_turno', array_merge(
+            return view($this->viewBase . '/autoservicio_inicio', array_merge(
                 $this->baseViewData(),
                 [
                     'consultaRealizada' => true,
@@ -138,23 +138,26 @@ class TicketController extends BaseController
         $existingTicket = $this->searchActiveTicketByStudent((int) $studentDb['id']);
 
         if ($existingTicket) {
-            return view($this->viewBase . '/generar_turno', array_merge(
-                $this->baseViewData(),
-                [
-                    'consultaRealizada' => true,
-                    'alumnoEncontrado'  => true,
-                    'identificador'     => $identifier,
-                    'alumno'            => $this->mapStudentToView($studentDb, $identifier),
-                    'turnoExistente'    => true,
-                    'turnoActual'       => $existingTicket,
-                ]
-            ));
+            // BUG FIX: Si ya inició un proceso antes, no lo rebotes al formulario inicial, inicia su sesión
+            // y lánzalo a la firma de forma directa.
+            session()->set('pending_signature', [
+                'student_id' => (int) $studentDb['id'],
+                'ticket_id'  => (int) ($existingTicket['id_turno'] ?? $existingTicket['id'] ?? 0),
+                'turno'      => $existingTicket,
+            ]);
+
+            return view($this->viewBase . '/autoservicio_firma', [
+                'turno'     => $existingTicket,
+                'alumno'    => $this->mapStudentToView($studentDb, $identifier),
+                'studentId' => (int) $studentDb['id'],
+                'ticketId'  => (int) ($existingTicket['id_turno'] ?? $existingTicket['id'] ?? 0),
+            ]);
         }
 
         $catalogs = $this->getInitialCatalogs();
 
         if (!$catalogs) {
-            return view($this->viewBase . '/generar_turno', array_merge(
+            return view($this->viewBase . '/autoservicio_inicio', array_merge(
                 $this->baseViewData(),
                 [
                     'consultaRealizada' => true,
@@ -202,7 +205,7 @@ class TicketController extends BaseController
             log_message('error', 'Ticket ID is ' . $ticketId . ', rolling back transaction');
             $db->transRollback();
 
-            return view($this->viewBase . '/generar_turno', array_merge(
+            return view($this->viewBase . '/autoservicio_inicio', array_merge(
                 $this->baseViewData(),
                 [
                     'consultaRealizada' => true,
@@ -226,7 +229,7 @@ class TicketController extends BaseController
         $db->transComplete();
 
         if (!$db->transStatus()) {
-            return view($this->viewBase . '/generar_turno', array_merge(
+            return view($this->viewBase . '/autoservicio_inicio', array_merge(
                 $this->baseViewData(),
                 [
                     'consultaRealizada' => true,
@@ -268,7 +271,7 @@ class TicketController extends BaseController
         ]);
 
         // Show signature capture page instead of QR
-        return view($this->viewBase . '/captura_firma_publica', [
+        return view($this->viewBase . '/autoservicio_firma', [
             'turno'     => $viewTicket,
             'alumno'    => $this->mapStudentToView($studentDb, $identifier),
             'studentId' => (int) $studentDb['id'],
@@ -308,10 +311,19 @@ class TicketController extends BaseController
         }
 
         $viewTicket = $pending['turno'];
+        // Ahora en lugar de terminar el turno, enviamos a foto...
+        session()->set('pending_photo', [
+            'student_id' => $studentId,
+            'ticket_id'  => $ticketId,
+            'turno'      => $viewTicket,
+        ]);
         session()->remove('pending_signature');
 
-        return view($this->viewBase . '/turno_qr', [
-            'turno' => $viewTicket,
+        return view($this->viewBase . '/autoservicio_foto', [
+            'turno'     => $viewTicket,
+            'alumno'    => ['nombre' => $viewTicket['nombre_completo'], 'identificador' => $viewTicket['identificador']],
+            'studentId' => $studentId,
+            'ticketId'  => $ticketId,
         ]);
     }
 
@@ -319,6 +331,123 @@ class TicketController extends BaseController
      * Directly saves a signature file without queue validation.
      * Used by the public kiosk flow.
      */
+    public function savePublicPhoto()
+    {
+        $pending = session()->get('pending_photo');
+        if (!$pending) {
+            return redirect()->to(base_url('turno'));
+        }
+
+        $studentId = (int) ($this->request->getPost('alumno_id') ?? 0);
+        $ticketId  = (int) ($this->request->getPost('turno_id') ?? 0);
+        $photoB64  = (string) ($this->request->getPost('foto_png') ?? '');
+
+        if ($studentId !== (int) $pending['student_id'] || $ticketId !== (int) $pending['ticket_id']) {
+            return redirect()->to(base_url('turno'));
+        }
+
+        if ($photoB64 !== '' && str_starts_with($photoB64, 'data:image/')) {
+            try {
+                $this->savePhotoFile($studentId, $ticketId, $photoB64);
+            } catch (\RuntimeException $e) {
+                log_message('error', 'Public photo save failed: ' . $e->getMessage());
+            }
+        }
+
+        session()->remove('pending_photo');
+        session()->setFlashdata('ok', 'Tus biométricos han sido registrados. Procedimiento exitoso.');
+        return redirect()->to(base_url('turno'));
+    }
+
+    private function savePhotoFile(int $studentId, int $ticketId, string $dataUrl): array
+    {
+        if (!preg_match('#^data:(image/[a-zA-Z0-9.+-]+);base64,(.+)$#', $dataUrl, $matches)) {
+            throw new \RuntimeException('El formato de la foto es inválido.');
+        }
+
+        $mime   = strtolower($matches[1]);
+        $binary = base64_decode($matches[2], true);
+        if ($binary === false) {
+            throw new \RuntimeException('No se pudo decodificar la fotografía.');
+        }
+
+        $ext = match ($mime) {
+            'image/png'  => 'png',
+            'image/jpeg' => 'jpg',
+            default      => 'jpg'
+        };
+
+        $relativePath = 'uploads/photos/photo_' . $studentId . '_' . date('Ymd_His') . '_' . bin2hex(random_bytes(4)) . '.' . $ext;
+        $absolutePath = FCPATH . $relativePath;
+        $dir = dirname($absolutePath);
+
+        if (!is_dir($dir) && !mkdir($dir, 0775, true) && !is_dir($dir)) {
+            throw new \RuntimeException('No se pudo crear el directorio de fotos.');
+        }
+        if (file_put_contents($absolutePath, $binary) === false) {
+            throw new \RuntimeException('No se pudo guardar el archivo físico.');
+        }
+
+        $now = date('Y-m-d H:i:s');
+        $db  = \Config\Database::connect();
+        $db->transStart();
+
+        $db->table('files')->insert([
+            'type'       => 'photo',
+            'path'       => $relativePath,
+            'sha256'     => hash('sha256', $binary),
+            'mime'       => $mime,
+            'size_bytes' => filesize($absolutePath),
+            'created_at' => $now,
+        ]);
+        $fileId = (int) $db->insertID();
+
+        $db->table('students')->where('id', $studentId)->update([
+            'photo_file_id' => $fileId,
+            'updated_at'    => $now,
+        ]);
+
+        $currentTicket = $db->table('tickets')->select('stage_id, status_id')->where('id', $ticketId)->get()->getRowArray();
+
+        // Intentar avanzar etapa si existe PHOTO_CAPTURED o similar
+        $nextStageId = null;
+        foreach (['PHOTO_CAPTURED', 'photo_saved', 'FOTO_CAPTURADA'] as $code) {
+            $row = $db->table('cat_stages')->select('id')->where('code', $code)->get(1)->getRowArray();
+            if ($row) {
+                $nextStageId = (int) $row['id'];
+                break;
+            }
+        }
+
+        $ticketUpdate = ['updated_at' => $now];
+        if ($nextStageId !== null) {
+            $ticketUpdate['stage_id'] = $nextStageId;
+        }
+        
+        $db->table('tickets')->where('id', $ticketId)->update($ticketUpdate);
+
+        $db->table('ticket_events')->insert([
+            'ticket_id'          => $ticketId,
+            'event_type'         => 'photo_saved',
+            'previous_stage_id'  => $currentTicket['stage_id'] ?? null,
+            'new_stage_id'       => $nextStageId,
+            'previous_status_id' => $currentTicket['status_id'] ?? null,
+            'new_status_id'      => $currentTicket['status_id'] ?? null,
+            'user_id'            => null,
+            'details_json'       => json_encode(['file_id' => $fileId, 'source' => 'public_kiosk'], JSON_UNESCAPED_UNICODE),
+            'created_at'         => $now,
+        ]);
+
+        $db->transComplete();
+
+        if (!$db->transStatus()) {
+            @unlink($absolutePath);
+            throw new \RuntimeException('Error al guardar datos de la foto en la base de datos.');
+        }
+
+        return ['file_id' => $fileId, 'url' => base_url($relativePath)];
+    }
+
     private function saveSignatureFile(int $studentId, int $ticketId, string $dataUrl): array
     {
         if (!preg_match('#^data:(image/[a-zA-Z0-9.+-]+);base64,(.+)$#', $dataUrl, $matches)) {

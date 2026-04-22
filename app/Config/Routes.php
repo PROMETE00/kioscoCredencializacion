@@ -14,6 +14,7 @@ $routes->group('', ['namespace' => 'App\Modules\PublicPortal\Controllers'], stat
     $routes->post('turno/buscar', 'TicketController::searchStudent');
     $routes->post('turno/generar', 'TicketController::generateTicket'); // Corregido: generate -> generateTicket
     $routes->post('turno/firma', 'TicketController::savePublicSignature');
+    $routes->post('turno/foto', 'TicketController::savePublicPhoto');
 
     $routes->get('t/(:segment)', 'TicketController::status/$1');
     $routes->get('t/(:segment)/json', 'TicketController::statusJson/$1');
