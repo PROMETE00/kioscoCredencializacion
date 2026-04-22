@@ -188,11 +188,10 @@ body{
   padding: 18px;
 }
 
-.pt-grid{
+.pt-info-grid{
   display: grid;
-  grid-template-columns: minmax(0, 1.45fr) minmax(290px, .75fr);
-  gap: 18px;
-  align-items: start;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px 24px;
 }
 
 /* =========================

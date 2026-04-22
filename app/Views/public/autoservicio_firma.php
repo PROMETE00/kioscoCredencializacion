@@ -42,16 +42,26 @@
           </p>
 
           <!-- ── Student info ── -->
-          <div class="pt-firma-info-row">
-            <div class="pt-info-card">
-              <div class="pt-info-card__title">Datos del alumno</div>
-              <div class="pt-info-list" style="display:grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-                <div style="flex-direction: column; align-items:flex-start; gap: 4px; border: none; padding:0;"><span>Nombre</span><strong><?= esc($alumno['nombre'] ?? 'N/A') ?></strong></div>
-                <div style="flex-direction: column; align-items:flex-start; gap: 4px; border: none; padding:0;"><span>No. control / ficha</span><strong><?= esc($alumno['identificador'] ?? 'N/A') ?></strong></div>
-                <div style="flex-direction: column; align-items:flex-start; gap: 4px; border: none; padding:0;"><span>Carrera</span><strong><?= esc($alumno['carrera'] ?? 'N/A') ?></strong></div>
-                <div style="flex-direction: column; align-items:flex-start; gap: 4px; border: none; padding:0;"><span>Campus</span><strong><?= esc($alumno['campus'] ?? 'N/A') ?></strong></div>
+          <div class="pt-info-card">
+            <h3 class="pt-info-card__title">Datos del alumno</h3>
+            <dl class="pt-info-grid">
+              <div class="pt-info-item">
+                <dt>Nombre</dt>
+                <dd><?= esc($alumno['nombre'] ?? 'N/A') ?></dd>
               </div>
-            </div>
+              <div class="pt-info-item">
+                <dt>No. control / ficha</dt>
+                <dd><?= esc($alumno['identificador'] ?? 'N/A') ?></dd>
+              </div>
+              <div class="pt-info-item">
+                <dt>Carrera</dt>
+                <dd><?= esc($alumno['carrera'] ?? 'N/A') ?></dd>
+              </div>
+              <div class="pt-info-item">
+                <dt>Campus</dt>
+                <dd><?= esc($alumno['campus'] ?? 'N/A') ?></dd>
+              </div>
+            </dl>
           </div>
 
           <!-- ── Mandatory confirmation ── -->
@@ -130,43 +140,50 @@
   margin: 0 auto;
 }
 
-/* ── Info cards row ── */
-.pt-firma-info-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
+/* ── Info Card Layout ── */
+.pt-info-card {
+  background: #f8fbff;
+  border: 1px solid var(--pt-input-border, #dbe4ef);
+  border-radius: 12px;
+  padding: 16px 20px;
   margin-top: 18px;
 }
 
-.pt-info-list {
+.pt-info-card__title {
+  margin: 0 0 14px 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: #1f2937;
+}
+
+.pt-info-grid {
+  display: grid;
+  /* El uso de auto-fit y minmax calcula columnas automáticamente */
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px 24px;
+  margin: 0;
+}
+
+.pt-info-item {
   display: flex;
   flex-direction: column;
+  gap: 4px;
 }
 
-.pt-info-list > div {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 12px;
-  padding: 10px 0;
-  border-bottom: 1px solid #f1f5f9;
-}
-
-.pt-info-list > div:last-child {
-  border-bottom: 0;
-}
-
-.pt-info-list span {
+.pt-info-item dt {
   color: var(--pt-muted, #6b7280);
-  font-size: 13px;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
   font-weight: 700;
 }
 
-.pt-info-list strong {
+.pt-info-item dd {
+  margin: 0;
   color: var(--pt-text-strong, #111827);
-  font-size: 13px;
-  font-weight: 800;
-  text-align: right;
+  font-size: 14px;
+  font-weight: 700;
+  word-break: break-word;
 }
 
 /* ── Confirmation checkbox ── */
@@ -358,9 +375,6 @@
 }
 
 @media (max-width: 640px) {
-  .pt-firma-info-row {
-    grid-template-columns: 1fr;
-  }
   #firmaCanvas {
     height: 200px;
   }
