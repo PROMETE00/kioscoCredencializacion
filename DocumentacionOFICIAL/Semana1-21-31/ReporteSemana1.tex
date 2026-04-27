@@ -1,0 +1,509 @@
+\documentclass[12pt,a4paper]{article}
+
+% ========= Codificación / Idioma =========
+\usepackage[utf8]{inputenc} % seguro para pdfLaTeX
+\usepackage[T1]{fontenc}
+\usepackage[spanish]{babel}
+\usepackage{lmodern}
+
+% ========= Márgenes =========
+\usepackage[a4paper,margin=2.5cm]{geometry}
+
+% ========= Listas (NECESARIO para opciones en enumerate/itemize) =========
+\usepackage{enumitem}
+
+% ========= Gráficos / color =========
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{tikz}
+\usetikzlibrary{calc}
+
+% ========= Enlaces / índice =========
+\usepackage{hyperref}
+\hypersetup{
+  colorlinks=true,
+  linkcolor=black,
+  urlcolor=blue
+}
+
+% ========= Encabezado / pie =========
+\usepackage{fancyhdr}
+\usepackage{lastpage}
+
+% ========= Espaciado =========
+\usepackage{setspace}
+
+% ========= Colores similares a TecNM =========
+\definecolor{tecnmOrange}{RGB}{243,110,33}
+\definecolor{tecnmBlack}{RGB}{0,0,0}
+
+% ========= Helper: logo con fallback =========
+\newcommand{\LogoBox}[3]{%
+  \IfFileExists{#1}{\includegraphics[height=#2]{#1}}{%
+    \fbox{\parbox[c][#2][c]{3.6cm}{\centering\footnotesize #3}}%
+  }%
+}
+
+% =========================
+% DATOS EDITABLES
+% =========================
+\newcommand{\Carrera}{Ingeniería en Sistemas Computacionales}
+\newcommand{\TipoDocumento}{REPORTE SEMANA 1 DE RESIDENCIA PROFESIONAL}
+\newcommand{\TituloProyecto}{Diseño de kiosco digital para el proceso de credencialización en el TecNM Campus Oaxaca}
+\newcommand{\Alumno}{Mendoza Luis Prometeo}
+\newcommand{\NoControl}{21160727}
+\newcommand{\Semestre}{10\textsuperscript{o}}
+\newcommand{\Periodo}{Enero--Junio 2026}
+% Evitamos el guion largo Unicode “—” para que no falle pdfLaTeX:
+\newcommand{\LugarFecha}{Oaxaca de Juárez, Oaxaca --- Enero 2026}
+
+% ====== Rutas robustas para logos (sin sufrir) ======
+\newcommand{\LogoAuto}[3]{%
+  % #1 = nombre archivo con extensión
+  % #2 = altura objetivo
+  % #3 = texto fallback
+  \IfFileExists{../assets/logos/#1}{%
+    \includegraphics[height=#2,width=\linewidth,keepaspectratio]{../assets/logos/#1}%
+  }{%
+    \IfFileExists{assets/logos/#1}{%
+      \includegraphics[height=#2,width=\linewidth,keepaspectratio]{assets/logos/#1}%
+    }{%
+      \fbox{\parbox[c][#2][c]{3.6cm}{\centering\footnotesize #3}}%
+    }%
+  }%
+}
+
+\newlength{\HeaderShift}
+\setlength{\HeaderShift}{2.0cm} % <-- sube/baja esto (2.0–2.6cm suele quedar bien)
+
+
+\begin{document}
+
+% =========================
+% PORTADA (Página 1)
+% =========================
+\pagenumbering{arabic}
+\setcounter{page}{1}
+\thispagestyle{empty}
+
+% DIBUJO DE LÍNEAS (como la portada)
+\begin{tikzpicture}[remember picture, overlay]
+  % Línea horizontal naranja (arriba)
+  \draw[tecnmOrange, line width=1.2pt]
+    ($(current page.north west)+(3.2cm,-3.6cm)$) --
+    ($(current page.north east)+(-2.2cm,-3.6cm)$);
+
+  % Barras verticales izquierda (negra + naranja + negra)
+  \draw[tecnmBlack, line width=3.0pt]
+    ($(current page.north west)+(2.0cm,-4.2cm)$) --
+    ($(current page.south west)+(2.0cm,2.0cm)$);
+
+  \draw[tecnmOrange, line width=2.0pt]
+    ($(current page.north west)+(2.5cm,-4.2cm)$) --
+    ($(current page.south west)+(2.5cm,2.0cm)$);
+
+  \draw[tecnmBlack, line width=0.8pt]
+    ($(current page.north west)+(2.9cm,-4.2cm)$) --
+    ($(current page.south west)+(2.9cm,2.0cm)$);
+
+  % Número de página abajo derecha (usa el contador real)
+  \node[anchor=south east] at ($(current page.south east)+(-1.6cm,1.2cm)$) {\small \thepage};
+\end{tikzpicture}
+
+% CABECERA CON LOGOS
+\vspace*{0.8cm}
+
+\noindent
+\hspace*{\HeaderShift}%
+\begin{minipage}[t]{\dimexpr\textwidth-\HeaderShift\relax}
+
+  \begin{minipage}[t]{0.34\linewidth}
+    \raggedright
+    \LogoAuto{SecretariaEducacion.png}{1.5cm}{LOGO EDUCACIÓN}
+  \end{minipage}
+  \hfill
+  \begin{minipage}[t]{0.40\linewidth}
+    \centering
+    \LogoAuto{Logo-TecNM.png}{1.6cm}{LOGO TECNM}
+  \end{minipage}
+  \hfill
+  \begin{minipage}[t]{0.20\linewidth}
+    \raggedleft
+    \LogoAuto{Instituto_Tecnologico_de_Oaxaca.png}{1.6cm}{LOGO ITO}
+  \end{minipage}
+
+\end{minipage}
+
+\vspace{2.2cm}
+
+
+% TEXTO CENTRAL
+\begin{center}
+  \setstretch{1.15}
+
+  {\large \textbf{INSTITUTO TECNOLÓGICO DE OAXACA}\par}
+  \vspace{0.4cm}
+  {\large \textbf{DIVISIÓN DE ESTUDIOS PROFESIONALES}\par}
+
+  \vspace{1.2cm}
+  {\normalsize \textbf{\Carrera}\par}
+
+  \vspace{1.2cm}
+  {\normalsize \textbf{\TipoDocumento}\par}
+
+  \vspace{1.2cm}
+  {\normalsize \TituloProyecto\par}
+
+  \vspace{1.6cm}
+  {\normalsize \textbf{PRESENTA:}\par}
+  \vspace{0.2cm}
+  {\normalsize \textbf{\Alumno}\par}
+
+  \vspace{1.6cm}
+  {\normalsize \textbf{NÚMERO DE CONTROL:}\par}
+  \vspace{0.2cm}
+  {\normalsize \textbf{\NoControl}\par}
+
+  \vspace{2.0cm}
+  {\normalsize \textbf{SEMESTRE:} \Semestre\par}
+  \vspace{0.2cm}
+  {\normalsize \textbf{PERIODO:} \Periodo\par}
+
+  \vfill
+  {\normalsize \LugarFecha\par}
+\end{center}
+
+\clearpage
+
+% =========================
+% ESTILO PARA EL RESTO DEL DOCUMENTO (Página 2 en adelante)
+% =========================
+\setcounter{page}{2}
+\setlength{\headheight}{14.5pt} % evita warning fancyhdr
+\pagestyle{fancy}
+\fancyhf{}
+\lhead{Residencia Profesional}
+\rhead{Semana 1}
+\cfoot{Página \thepage{} de \pageref{LastPage}}
+\renewcommand{\headrulewidth}{0.4pt}
+
+% =========================
+% CONTENIDO
+% =========================
+\tableofcontents
+\clearpage
+
+
+\section{Proceso actual}
+
+\subsection{Actores involucrados}
+\begin{itemize}
+  \item \textbf{Estudiantes} (nuevo ingreso o alumnos matriculados).
+  \item \textbf{Personal de Servicio Social} (orientación, control de fila, captura de firma preliminar).
+  \item \textbf{Operador de captura} (toma manual de fotografía).
+  \item \textbf{Operadores de impresión} (genera PDFs, imprime, valida listas).
+  \item \textbf{Servicios Escolares} (recibe listas y anuncia fechas de entrega).
+\end{itemize}
+
+\subsection{Flujo general}
+\begin{enumerate}[leftmargin=*, label=\textbf{\arabic*.}]
+  \item \textbf{Llegada y formación de filas.}
+  \begin{itemize}
+    \item Los estudiantes llegan y se forman; usualmente hay \textbf{filas largas}.
+  \end{itemize}
+
+  \item \textbf{Inducción manual de código de vestimenta.}
+  \begin{itemize}
+    \item El personal indica las reglas porque muchos estudiantes:
+    \begin{itemize}
+      \item no conocen el código de vestimenta,
+      \item o no vieron/leyeron las indicaciones.
+    \end{itemize}
+    \item Indicaciones típicas:
+    \begin{itemize}
+      \item camisa tipo polo sin logos,
+      \item cabello recogido/atrás de los hombros,
+      \item sin lentes ni aretes,
+      \item evitar prendas demasiado descubiertas
+    \end{itemize}
+  \end{itemize}
+
+  \item \textbf{Recolección de firma mientras esperan.}
+  \begin{itemize}
+    \item Debido a la fila larga, se aprovecha para \textbf{recolectar firmas uno por uno}.
+    \item Existe una \textbf{página web simple} para recolectar las firmas.
+    \item Para ubicar al estudiante, se busca en \textbf{Discere} por:
+    \begin{itemize}
+      \item \textbf{número de control} o
+      \item \textbf{número de ficha}.
+    \end{itemize}
+    \item Problemas observados:
+    \begin{itemize}
+      \item a veces la firma falla o no se registra bien,
+      \item no hay un \textbf{mensaje claro de confirmación}.
+    \end{itemize}
+  \end{itemize}
+
+  \item \textbf{Captura de foto.}
+  \begin{itemize}
+    \item Cuando el estudiante pasa a la estación de foto, se vuelve a pedir el identificador:
+    \begin{itemize}
+      \item ficha/control,
+      \item o búsqueda por \textbf{nombre/carrera} (basado en opciones disponibles).
+    \end{itemize}
+    \item Un operador toma la foto manualmente.
+    \item Problemas observados:
+    \begin{itemize}
+      \item errores al capturar o guardar la foto,
+      \item si se repite la foto, se generan \textbf{múltiples imágenes} (una por intento).
+    \end{itemize}
+  \end{itemize}
+
+  \item \textbf{Impresión de credenciales.}
+  \begin{itemize}
+    \item Desde el sistema se generan bloques de  \textbf{PDFs} y se aplica el formato de credencial correspondiente.
+    \item Desde una computadora se manda a imprimir usando \textbf{parámetros específicos} para evitar atascos o errores de impresión.
+    \item Se retrasa porque se valida con una \textbf{lista en papel} para confirmar qué credenciales ya se imprimieron.
+    \item El proceso se repite por carrera, tiempo estimado de \textbf{3 meses}.
+  \end{itemize}
+
+  \item \textbf{Envío de listas a Servicios Escolares.}
+  \begin{itemize}
+    \item Se mandan listas a Servicios Escolares.
+    \item Se anuncian fechas para la entrega de credenciales.
+  \end{itemize}
+\end{enumerate}
+
+\subsection{Principales problemáticas del proceso actual}
+
+\begin{itemize}
+  \item \textbf{Saturación en la atención:} se presentan filas extensas, lo que incrementa los tiempos de espera y obliga a reiterar instrucciones de manera constante.
+  \item \textbf{Duplicidad de actividades:} se realiza la identificación y/o búsqueda del estudiante en más de una etapa (captura de firma y, posteriormente, captura de fotografía), generando retrabajo.
+  \item \textbf{Retroalimentación insuficiente del sistema:} no siempre se muestra una confirmación clara y verificable al momento de registrar la firma y/o la fotografía.
+  \item \textbf{Gestión ineficiente de reintentos:} al repetir la toma de fotografía se generan múltiples archivos, sin garantizar de forma consistente que la evidencia final válida corresponda a la última captura.
+  \item \textbf{Control manual de impresión y entrega:} el seguimiento del estado de impresión y entrega depende en gran medida de listas físicas, lo que incrementa el riesgo de errores y dificulta la trazabilidad.
+\end{itemize}
+\newpage
+%==========================================================
+\section{Proceso propuesto}
+
+\subsection{Descripción general de la solución}
+Se propone el desarrollo de un \textbf{sistema web institucional} (implementado en \textbf{PHP}) que permita digitalizar, ordenar y dar trazabilidad al proceso de credencialización, mediante los siguientes componentes:
+
+\begin{itemize}
+  \item \textbf{Sistema de turnos con código QR}, accesible desde teléfono móvil y/o visualizado en una pantalla pública.
+  \item \textbf{Emisión de turno impreso} como alternativa para estudiantes que no cuenten con datos móviles.
+  \item \textbf{Módulo de autoservicio (kiosco)}, para la confirmación de identidad y la aceptación de indicaciones previas a la captura.
+  \item \textbf{Módulo de captura de evidencias} asociado al turno (firma, fotografía y huella).
+  \item \textbf{Validación de calidad} previa a la impresión y \textbf{control de impresión/entrega} mediante registro en bitácora.
+\end{itemize}
+
+%==========================================================
+\section{Flujo del proceso futuro por etapas}
+
+\subsection{Etapa 1 --- Sistema de turnos con código QR (gestión de fila)}
+\textbf{Propósito:} organizar la atención, reducir aglomeraciones y proporcionar visibilidad del avance del turno.
+
+\textbf{Requerimientos funcionales:}
+\begin{itemize}
+  \item Generar un \textbf{turno de atención} mediante:
+  \begin{itemize}
+    \item código QR y portal web,
+    \item acceso desde dispositivo móvil,
+    \item y/o visualización en pantalla pública.
+  \end{itemize}
+  \item Mostrar información mínima del turno:
+  \begin{itemize}
+    \item turno actual en atención,
+    \item tiempo estimado de espera.
+  \end{itemize}
+  \item Contemplar la \textbf{impresión de un turno} como alternativa para estudiantes sin conectividad.
+\end{itemize}
+
+\textbf{Reglas de operación propuestas:}
+\begin{itemize}
+  \item El turno tendrá \textbf{vigencia limitada.}
+  \item Cada estudiante podrá generar más turnos durante el día; sin embargo, solo podrá contar con \textbf{un turno activo} a la vez.
+  \item Si el turno vence, el estudiante podrá generar uno nuevo.
+\end{itemize}
+
+%==========================================================
+\subsection{Etapa 2 --- Módulo de autoservicio (verificación previa)}
+\textbf{Propósito:} disminuir errores y retrabajo, asegurando que el estudiante llegue a la captura con información confirmada.
+
+\textbf{Requerimientos funcionales:}
+\begin{itemize}
+  \item Permitir que el estudiante se identifique mediante:
+  \begin{itemize}
+    \item número de control o número de ficha.
+  \end{itemize}
+  \item Visualizar y confirmar datos generales del estudiante y, en su caso:
+  \begin{itemize}
+    \item validar/actualizar información básica autorizada,
+    \item presentar y solicitar aceptación de recomendaciones (código de vestimenta y guía para fotografía).
+  \end{itemize}
+  \item Permitir que este módulo pueda consultarse:
+  \begin{itemize}
+    \item en pantalla pública, o
+    \item desde el dispositivo móvil del estudiante (cuando cuente con conectividad).
+  \end{itemize}
+\end{itemize}
+
+%==========================================================
+\subsection{Etapa 3 --- Módulo de captura de evidencias (firma, fotografía y huella)}
+\textbf{Propósito:} capturar evidencias de manera controlada y vinculada a un turno vigente.
+
+\textbf{Requerimientos funcionales:}
+\begin{itemize}
+  \item Capturar las evidencias requeridas:
+  \begin{itemize}
+    \item firma,
+    \item fotografía,
+    \item huella.
+  \end{itemize}
+  \item Asociar toda evidencia al \textbf{turno activo} (sesión por tiempo), evitando capturas aisladas sin control.
+  \item Proporcionar retroalimentación clara:
+  \begin{itemize}
+    \item mensajes explícitos de éxito y error,
+    \item control de reintentos,
+    \item garantía de que la \textbf{evidencia válida final} corresponda a la última captura aprobada (especialmente en fotografía).
+  \end{itemize}
+\end{itemize}
+
+%==========================================================
+\subsection{Etapa 4 --- Validación de calidad (estudiante y personal)}
+\textbf{Propósito:} garantizar la calidad mínima de la credencial antes de su impresión, reduciendo recapturas y reclamaciones.
+
+\textbf{Requerimientos funcionales:}
+\begin{itemize}
+  \item Presentar una pantalla de validación posterior a la captura para revisar:
+  \begin{itemize}
+    \item fotografía (encuadre, nitidez, iluminación y visibilidad del rostro),
+    \item firma,
+    \item datos generales del estudiante.
+  \end{itemize}
+  \item Validación por el estudiante:
+  \begin{itemize}
+    \item confirmación de conformidad con datos y evidencias.
+  \end{itemize}
+  \item Validación por el personal:
+  \begin{itemize}
+    \item listado de credenciales pendientes de revisión,
+    \item posibilidad de aprobar o enviar a recaptura cuando no cumpla criterios mínimos.
+  \end{itemize}
+\end{itemize}
+
+%==========================================================
+\subsection{Etapa 5 --- Control de impresión y respaldo en formato PDF}
+\textbf{Propósito:} asegurar un flujo de impresión controlado y contar con alternativa operativa ante fallas.
+
+\textbf{Requerimientos funcionales:}
+\begin{itemize}
+  \item Permitir la impresión posterior a la validación, con intervención mínima por parte del personal.
+  \item Mantener un control de estados:
+  \begin{itemize}
+    \item credenciales pendientes por imprimir,
+    \item credenciales impresas.
+  \end{itemize}
+  \item Proveer un mecanismo de respaldo:
+  \begin{itemize}
+    \item descarga manual del archivo PDF cuando la impresión automática no esté disponible.
+  \end{itemize}
+\end{itemize}
+
+%==========================================================
+\subsection{Etapa 6 --- Entrega, acuse y bitácora de seguimiento}
+\textbf{Propósito:} registrar la entrega de credenciales con trazabilidad completa.
+
+\textbf{Requerimientos funcionales:}
+\begin{itemize}
+  \item Registrar la entrega incluyendo:
+  \begin{itemize}
+    \item confirmación de entrega al estudiante,
+    \item acuse (por definir: digital o físico),
+    \item fecha y hora,
+    \item responsable de la entrega,
+    \item estado final de la credencial (entregada).
+  \end{itemize}
+  \item Permitir consulta para identificar:
+  \begin{itemize}
+    \item si la credencial ya fue impresa,
+    \item si la credencial ya fue entregada.
+  \end{itemize}
+\end{itemize}
+
+%==========================================================
+\subsection{Etapa 7 --- Reportes e indicadores de operación}
+\textbf{Propósito:} medir resultados, evidenciar mejoras y facilitar la toma de decisiones.
+
+\textbf{Requerimientos sugeridos:}
+\begin{itemize}
+  \item Medición de tiempos por etapa:
+  \begin{itemize}
+    \item espera (turno),
+    \item captura,
+    \item validación,
+    \item impresión,
+    \item entrega.
+  \end{itemize}
+  \item Registro de reintentos:
+  \begin{itemize}
+    \item número de repeticiones de firma y fotografía.
+  \end{itemize}
+  \item Volumen operativo:
+  \begin{itemize}
+    \item estudiantes atendidos por día y por carrera.
+  \end{itemize}
+  \item Indicador de ``primera vez'':
+  \begin{itemize}
+    \item porcentaje de credenciales que no requieren recaptura ni reimpresión.
+  \end{itemize}
+\end{itemize}
+
+%==========================================================
+\section{Datos e identificación utilizados en el proceso}
+
+\subsection{Datos generales del estudiante}
+\begin{itemize}
+  \item Nombre(s) y apellidos.
+  \item Carrera.
+  \item Firma.
+  \item Fotografía.
+  \item Número de control o número de ficha.
+\end{itemize}
+
+\subsection{Criterios de búsqueda e identificación}
+\begin{itemize}
+  \item Número de control.
+  \item Número de ficha.
+  \item Nombre.
+  \item Carrera.
+\end{itemize}
+
+%==========================================================
+\section{Situación operativa a resolver mediante el proceso futuro}
+\begin{itemize}
+  \item Reducir tiempos de espera y aglomeraciones mediante un control visible de turnos.
+  \item Eliminar la duplicidad de identificación y captura en diferentes etapas del proceso.
+  \item Asegurar confirmaciones claras y verificables al registrar firma y fotografía.
+  \item Controlar reintentos y garantizar que la evidencia final válida sea la utilizada en la credencial.
+  \item Fortalecer la trazabilidad de impresión y entrega mediante bitácora y estados de seguimiento.
+\end{itemize}
+
+%==========================================================
+\section{Actividades realizadas (Semana 1)}
+\begin{itemize}
+  \item Levantamiento del proceso actual e identificación de problemáticas operativas.
+  \item Documentación del proceso futuro por etapas como base para la definición de requerimientos y alcance.
+  \item Identificación de datos de búsqueda y evidencias asociadas (firma, fotografía y huella).
+\end{itemize}
+
+\section{Pendientes para Semana 2}
+\begin{itemize}
+  \item Convertir las etapas del proceso futuro en requerimientos formales (historias de usuario y criterios de aceptación).
+  \item Definir un modelo de datos mínimo (turno, estudiante, evidencias, estados y bitácora).
+  \item Precisar el mecanismo de integración con el sistema institucional (Discere): campos disponibles, fuentes de datos y puntos de integración.
+\end{itemize}
+%==========================================================
+
+\end{document}

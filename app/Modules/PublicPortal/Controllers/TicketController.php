@@ -311,19 +311,32 @@ class TicketController extends BaseController
         }
 
         $viewTicket = $pending['turno'];
-        // Ahora en lugar de terminar el turno, enviamos a foto...
-        session()->set('pending_photo', [
+        // Ahora de firma pasamos a HUELLA
+        session()->set('pending_huella', [
             'student_id' => $studentId,
             'ticket_id'  => $ticketId,
             'turno'      => $viewTicket,
         ]);
         session()->remove('pending_signature');
 
+        return redirect()->to(base_url('huella'));
+    }
+
+    /**
+     * Muestra la vista de autoservicio para la fotografía.
+     */
+    public function photo()
+    {
+        $pending = session()->get('pending_photo');
+        if (!$pending) {
+            return redirect()->to(base_url('turno'));
+        }
+
         return view($this->viewBase . '/autoservicio_foto', [
-            'turno'     => $viewTicket,
-            'alumno'    => ['nombre' => $viewTicket['nombre_completo'], 'identificador' => $viewTicket['identificador']],
-            'studentId' => $studentId,
-            'ticketId'  => $ticketId,
+            'turno'     => $pending['turno'],
+            'alumno'    => ['nombre' => $pending['turno']['nombre_completo'], 'identificador' => $pending['turno']['identificador']],
+            'studentId' => $pending['student_id'],
+            'ticketId'  => $pending['ticket_id'],
         ]);
     }
 
@@ -355,7 +368,7 @@ class TicketController extends BaseController
         }
 
         session()->remove('pending_photo');
-        session()->setFlashdata('ok', 'Tus biométricos han sido registrados. Procedimiento exitoso.');
+        session()->setFlashdata('ok', '¡Trámite completado! Tus biométricos han sido registrados exitosamente.');
         return redirect()->to(base_url('turno'));
     }
 

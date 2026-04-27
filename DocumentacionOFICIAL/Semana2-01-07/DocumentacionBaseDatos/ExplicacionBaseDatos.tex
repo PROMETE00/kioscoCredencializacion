@@ -1,0 +1,446 @@
+\documentclass[12pt,a4paper]{article}
+
+% --- Configuración para pdfLaTeX ---
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[spanish]{babel}
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{hyperref}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+
+\title{Modelo de Base de Datos\\Kiosco de Credencialización}
+\author{}
+\date{}
+
+% Columnas para diccionario
+\newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
+\newcolumntype{C}[1]{>{\centering\arraybackslash}p{#1}}
+
+\begin{document}
+\maketitle
+
+\section{Propósito y alcance del modelo}
+
+El modelo de base de datos se define para soportar el proceso de credencialización mediante kiosco, basado en turnos con folio y código QR, vigencia temporal, captura de evidencias obligatorias (firma, fotografía y huella), validación por personal, generación de documento PDF, registro de intentos de impresión, control de entrega mediante acuse (cuando aplique) y documentación de incidencias. Adicionalmente, el modelo contempla trazabilidad completa por medio de bitácoras y referencia explícita a usuarios responsables de las acciones.
+
+El diseño prioriza los siguientes criterios:
+\begin{itemize}
+  \item Integridad referencial mediante llaves foráneas.
+  \item Trazabilidad de eventos relevantes (auditoría operativa).
+  \item Soporte explícito para recapturas y reintentos sin pérdida de historial.
+  \item Centralización del almacenamiento de evidencias y documentos mediante una entidad de archivos.
+  \item Separación entre estatus administrativo del turno y etapa operativa del flujo.
+\end{itemize}
+
+\section{Entidades del modelo y justificación}
+
+\subsection{\texttt{roles}}
+\textbf{Función.} Define los perfiles de acceso del sistema (por ejemplo: administrador, capturista, validador, impresión).\\
+\textbf{Justificación.} Permite control de permisos por perfil y estandariza la asignación de responsabilidades.
+
+\subsection{\texttt{usuarios}}
+\textbf{Función.} Gestiona las credenciales de acceso y el estado de habilitación del personal del sistema.\\
+\textbf{Relación clave.} Cada usuario pertenece a un rol.\\
+\textbf{Justificación.} Es necesario para identificar al responsable de acciones registradas en bitácoras, validaciones, sesiones, impresiones e incidencias, garantizando trazabilidad institucional.
+
+\subsection{\texttt{cat\_estatus\_turno}}
+\textbf{Función.} Catálogo del estado administrativo del turno (vigencia o validez).\\
+\textbf{Justificación.} Mantiene estandarizados los valores de estatus y facilita reportes y mantenimiento sin modificar lógica en código.
+
+\subsection{\texttt{cat\_etapas}}
+\textbf{Función.} Catálogo de etapas operativas del flujo del trámite.\\
+\textbf{Justificación.} Formaliza el avance del proceso en pasos verificables, ordenables y medibles. El campo \texttt{es\_terminal} permite definir etapas de cierre.
+
+\subsection{\texttt{archivos}}
+\textbf{Función.} Repositorio lógico de archivos digitales (ruta, hash y metadatos), utilizado para fotografía, firma, huella, PDF y acuse.\\
+\textbf{Justificación.} Centraliza el manejo de almacenamiento y evita duplicación de metadatos. El hash permite control de integridad y deduplicación.
+
+\subsection{\texttt{alumnos}}
+\textbf{Función.} Entidad principal de identificación del alumno o solicitante.\\
+\textbf{Justificación.} El proceso se vincula a una persona identificada por \texttt{numero\_control} o \texttt{numero\_ficha} (exclusivos). La carrera se almacena como datos operativos (\texttt{carrera\_clave} y \texttt{carrera\_nombre}).\\
+\textbf{Referencia operativa a evidencias vigentes.} Los campos \texttt{foto\_archivo\_id}, \texttt{firma\_archivo\_id} y \texttt{huella\_archivo\_id} mantienen una referencia directa a la evidencia vigente. Estas referencias pueden ser nulas al inicio del trámite; sin embargo, el proceso operativo exige contar con las tres evidencias (foto, firma y huella) para avanzar a etapas de cierre (por ejemplo: impresión y entrega).
+
+\subsection{\texttt{turnos}}
+\textbf{Función.} Representa cada ejecución del proceso de credencialización. Contiene folio (QR), vigencia (\texttt{fecha\_expira}), hash del token de QR y marcas de tiempo de operación.\\
+\textbf{Justificación.} Un alumno puede realizar el trámite en distintos momentos, por lo que el turno se modela como entidad independiente y trazable.\\
+\textbf{Restricción operativa.} Se garantiza un único turno activo por alumno mediante un índice \texttt{UNIQUE(alumno\_id, es\_activo)}. El valor \texttt{es\_activo = 1} representa el turno vigente; turnos históricos se conservan con \texttt{es\_activo = NULL}.
+
+\subsection{\texttt{turno\_eventos}}
+\textbf{Función.} Bitácora de eventos asociada a un turno. Puede registrar cambios de etapa, cambios de estatus y eventos operativos relevantes, con detalle adicional en \texttt{detalle\_json}.\\
+\textbf{Justificación.} Permite auditoría completa: qué ocurrió, cuándo ocurrió, quién lo realizó y cuál fue el estado anterior y posterior.
+
+\subsection{\texttt{sesiones\_captura}}
+\textbf{Función.} Agrupa la actividad de captura de evidencias para un turno (inicio, fin, observaciones y usuario).\\
+\textbf{Justificación.} Modela recapturas y múltiples sesiones sin perder historial y permite medir tiempos de operación.
+
+\subsection{\texttt{evidencias\_captura}}
+\textbf{Función.} Registra evidencias generadas durante sesiones de captura (fotografía, firma o huella) y mantiene historial de reemplazos.\\
+\textbf{Justificación.} Conserva trazabilidad documental por turno y sesión. El campo \texttt{reemplaza\_evidencia\_id} vincula evidencias sustituidas para auditoría.
+
+\subsection{\texttt{validaciones\_personal}}
+\textbf{Función.} Registra la decisión del personal sobre un turno (aprobado, recaptura o rechazado), con motivo.\\
+\textbf{Justificación.} Formaliza control de calidad y permite justificar recapturas o rechazos.
+
+\subsection{\texttt{credenciales\_pdf}}
+\textbf{Función.} Registra el PDF oficial generado para el turno y el usuario que lo generó (cuando aplique).\\
+\textbf{Justificación.} Control documental previo a impresión. La unicidad por turno evita múltiples PDFs oficiales por trámite.
+
+\subsection{\texttt{impresiones}}
+\textbf{Función.} Registra intentos de impresión, su resultado y, en caso de fallo, el detalle.\\
+\textbf{Justificación.} Permite auditar reintentos y fallas y soportar reportes.
+
+\subsection{\texttt{acuses\_entrega}}
+\textbf{Función.} Registra el acuse de entrega asociado al turno, con archivo de acuse y firma del acuse cuando aplique, además de marcas de tiempo.\\
+\textbf{Justificación.} Permite documentar la entrega bajo el esquema operativo adoptado por la institución.
+
+\subsection{\texttt{incidencias}}
+\textbf{Función.} Registra fallas relevantes del proceso con descripción y contexto en \texttt{snapshot\_json}.\\
+\textbf{Justificación.} Soporta reportes institucionales y análisis de fallas con evidencia contextual.
+
+\section{Relaciones entre entidades y cardinalidades}
+
+\subsection{\texttt{roles} y \texttt{usuarios} (1:N)}
+\textbf{Implementación.} \texttt{usuarios.rol\_id} referencia \texttt{roles.id}.\\
+\textbf{Justificación.} Perfiles de acceso y responsabilidades.
+
+\subsection{\texttt{alumnos} y \texttt{turnos} (1:N)}
+\textbf{Implementación.} \texttt{turnos.alumno\_id} referencia \texttt{alumnos.id}.\\
+\textbf{Justificación.} Historial de trámites por alumno y control de turno vigente.
+
+\subsection{\texttt{turnos} y \texttt{cat\_estatus\_turno} (N:1)}
+\textbf{Implementación.} \texttt{turnos.estatus\_turno\_id} referencia \texttt{cat\_estatus\_turno.id}.\\
+\textbf{Justificación.} Estado administrativo centralizado.
+
+\subsection{\texttt{turnos} y \texttt{cat\_etapas} (N:1)}
+\textbf{Implementación.} \texttt{turnos.etapa\_actual\_id} referencia \texttt{cat\_etapas.id}.\\
+\textbf{Justificación.} Progreso del flujo estandarizado.
+
+\subsection{\texttt{turnos} y \texttt{turno\_eventos} (1:N)}
+\textbf{Implementación.} \texttt{turno\_eventos.turno\_id} referencia \texttt{turnos.id}. El evento puede referenciar etapas y estatus, y opcionalmente un usuario.\\
+\textbf{Justificación.} Auditoría completa del trámite.
+
+\subsection{\texttt{turnos} y \texttt{sesiones\_captura} (1:N)}
+\textbf{Implementación.} \texttt{sesiones\_captura.turno\_id} referencia \texttt{turnos.id}. Opcionalmente, \texttt{sesiones\_captura.usuario\_id} referencia \texttt{usuarios.id}.\\
+\textbf{Justificación.} Captura iterativa con responsable.
+
+\subsection{\texttt{sesiones\_captura} y \texttt{evidencias\_captura} (1:N)}
+\textbf{Implementación.} \texttt{evidencias\_captura.sesion\_captura\_id} referencia \texttt{sesiones\_captura.id}. Asimismo, \texttt{evidencias\_captura.turno\_id} referencia \texttt{turnos.id}.\\
+\textbf{Justificación.} Historial de evidencias por sesión y por turno.
+
+\subsection{\texttt{evidencias\_captura} y \texttt{archivos} (N:1)}
+\textbf{Implementación.} \texttt{evidencias\_captura.archivo\_id} referencia \texttt{archivos.id}.\\
+\textbf{Justificación.} Centralización de almacenamiento (metadatos y control de integridad).
+
+\subsection{\texttt{alumnos} y \texttt{archivos} (evidencias vigentes) (N:1, según disponibilidad)}
+\textbf{Implementación.} \texttt{alumnos.foto\_archivo\_id}, \texttt{alumnos.firma\_archivo\_id} y \texttt{alumnos.huella\_archivo\_id} referencian \texttt{archivos.id}.\\
+\textbf{Justificación.} Consulta inmediata de evidencias vigentes para generación de credencial y validación operativa.
+
+\subsection{\texttt{validaciones\_personal} con \texttt{turnos} y \texttt{usuarios} (N:1)}
+\textbf{Implementación.} \texttt{validaciones\_personal.turno\_id} referencia \texttt{turnos.id}; \texttt{validaciones\_personal.usuario\_id} referencia \texttt{usuarios.id}.\\
+\textbf{Justificación.} Control de calidad con responsable y evidencia de decisión.
+
+\subsection{\texttt{credenciales\_pdf} con \texttt{turnos}, \texttt{archivos} y \texttt{usuarios}}
+\textbf{Implementación.} \texttt{credenciales\_pdf.turno\_id} (único) referencia \texttt{turnos.id}; \texttt{credenciales\_pdf.archivo\_pdf\_id} referencia \texttt{archivos.id}; \texttt{credenciales\_pdf.generado\_por\_usuario\_id} referencia \texttt{usuarios.id} (opcional).\\
+\textbf{Justificación.} Control documental y auditoría del generador.
+
+\subsection{\texttt{impresiones} con \texttt{turnos} y \texttt{usuarios}}
+\textbf{Implementación.} \texttt{impresiones.turno\_id} referencia \texttt{turnos.id}; \texttt{impresiones.usuario\_id} referencia \texttt{usuarios.id}.\\
+\textbf{Justificación.} Registro de reintentos y fallos.
+
+\subsection{\texttt{acuses\_entrega} con \texttt{turnos} y \texttt{archivos}}
+\textbf{Implementación.} \texttt{acuses\_entrega.turno\_id} (único) referencia \texttt{turnos.id}; \texttt{acuses\_entrega.archivo\_acuse\_id} y \texttt{acuses\_entrega.firma\_acuse\_archivo\_id} referencian \texttt{archivos.id} (según aplique).\\
+\textbf{Justificación.} Evidencia de entrega y respaldo documental.
+
+\subsection{\texttt{incidencias} con \texttt{turnos}, \texttt{usuarios} y \texttt{cat\_etapas}}
+\textbf{Implementación.} \texttt{incidencias.turno\_id} referencia \texttt{turnos.id}; \texttt{incidencias.usuario\_id} referencia \texttt{usuarios.id} (opcional); \texttt{incidencias.etapa\_id} referencia \texttt{cat\_etapas.id} (opcional).\\
+\textbf{Justificación.} Reportes de fallas con contexto y clasificación.
+
+\section{Gestión de estados del sistema}
+
+\subsection{Estatus administrativo del turno (\texttt{cat\_estatus\_turno})}
+
+El estatus del turno expresa su validez administrativa y su condición de vigencia. Se contemplan los valores:
+\begin{itemize}
+  \item \texttt{activo}: el turno es válido y puede ser atendido.
+  \item \texttt{vencido}: el turno superó la vigencia definida por \texttt{turnos.fecha\_expira}.
+  \item \texttt{cancelado}: el turno se anuló por duplicidad o error operativo.
+  \item \texttt{finalizado}: el turno concluyó y deja de ser operativo.
+\end{itemize}
+
+La vigencia se controla con \texttt{turnos.fecha\_expira}. El momento de atención puede registrarse con \texttt{turnos.llamado\_at}. Adicionalmente, \texttt{es\_activo} funciona como indicador técnico para garantizar unicidad de turno vigente por alumno mediante la restricción \texttt{UNIQUE(alumno\_id, es\_activo)}.
+
+\subsection{Etapas operativas del proceso (\texttt{cat\_etapas})}
+
+Las etapas describen el progreso del trámite en el flujo operativo y se almacenan como catálogo para garantizar uniformidad y medición. La etapa actual de un turno se registra en \texttt{turnos.etapa\_actual\_id}. El catálogo incluye, entre otras, las etapas \texttt{turno\_generado}, \texttt{preregistro\_iniciado}, confirmaciones de datos e indicaciones, \texttt{firma\_registrada}, \texttt{huella\_registrada}, \texttt{foto\_registrada}, \texttt{capturado}, \texttt{en\_validacion\_personal}, \texttt{recaptura\_requerida}, \texttt{listo\_para\_impresion}, \texttt{pdf\_generado}, \texttt{en\_impresion}, \texttt{error\_impresion}, \texttt{impreso}, \texttt{acuse\_generado}, \texttt{entregado} y \texttt{completada}. El campo \texttt{cat\_etapas.es\_terminal} permite identificar etapas de cierre para apoyar reglas de negocio y reportes.
+
+\section{Conclusión}
+
+El modelo propuesto cubre la totalidad de entidades operativas requeridas para credencialización por kiosco, preservando integridad referencial y trazabilidad completa. La separación entre estatus administrativo y etapa operativa permite controlar simultáneamente la vigencia del turno y su avance en el flujo. La centralización de contenidos digitales en \texttt{archivos}, junto con el historial de evidencias y bitácoras, asegura auditabilidad y soporte institucional para validaciones, recapturas, reimpresiones, entregas e incidencias.
+
+% ============================================================
+% DICCIONARIO DE DATOS (al final)
+% ============================================================
+
+\clearpage
+\section{Diccionario de datos}
+
+A continuación se presenta el diccionario de datos por entidad. Se documentan los campos, su tipo lógico en MySQL, nulabilidad, restricciones (PK, FK, UNIQUE, CHECK) y su propósito.
+
+% ---------- roles ----------
+\subsection{\texttt{roles}}
+\begin{longtable}{L{3.2cm} L{3.2cm} C{1.2cm} L{2.6cm} L{5.2cm}}
+\toprule
+\textbf{Campo} & \textbf{Tipo} & \textbf{NULL} & \textbf{Restricción} & \textbf{Descripción} \\
+\midrule
+\endhead
+id & BIGINT UNSIGNED & No & PK & Identificador interno del rol. \\
+codigo & VARCHAR(30) & No & UNIQUE & Código del rol (por ejemplo: admin, capturista). \\
+nombre & VARCHAR(80) & No &  & Nombre descriptivo del rol. \\
+\bottomrule
+\end{longtable}
+
+% ---------- usuarios ----------
+\subsection{\texttt{usuarios}}
+\begin{longtable}{L{3.2cm} L{3.2cm} C{1.2cm} L{2.6cm} L{5.2cm}}
+\toprule
+\textbf{Campo} & \textbf{Tipo} & \textbf{NULL} & \textbf{Restricción} & \textbf{Descripción} \\
+\midrule
+\endhead
+id & BIGINT UNSIGNED & No & PK & Identificador interno del usuario. \\
+usuario & VARCHAR(50) & No & UNIQUE & Nombre de usuario para autenticación. \\
+password\_hash & VARCHAR(255) & No &  & Hash de contraseña. \\
+rol\_id & BIGINT UNSIGNED & No & FK(\texttt{roles}) & Rol asignado al usuario. \\
+activo & TINYINT(1) & No &  & Indicador de habilitación del usuario. \\
+created\_at & DATETIME & Sí &  & Fecha de creación del registro. \\
+updated\_at & DATETIME & Sí &  & Fecha de última actualización. \\
+\bottomrule
+\end{longtable}
+
+% ---------- cat_estatus_turno ----------
+\subsection{\texttt{cat\_estatus\_turno}}
+\begin{longtable}{L{3.2cm} L{3.2cm} C{1.2cm} L{2.6cm} L{5.2cm}}
+\toprule
+\textbf{Campo} & \textbf{Tipo} & \textbf{NULL} & \textbf{Restricción} & \textbf{Descripción} \\
+\midrule
+\endhead
+id & BIGINT UNSIGNED & No & PK & Identificador del estatus. \\
+codigo & VARCHAR(30) & No & UNIQUE & Código del estatus (activo, vencido, etc.). \\
+nombre & VARCHAR(80) & No &  & Nombre del estatus. \\
+\bottomrule
+\end{longtable}
+
+% ---------- cat_etapas ----------
+\subsection{\texttt{cat\_etapas}}
+\begin{longtable}{L{3.2cm} L{3.2cm} C{1.2cm} L{2.6cm} L{5.2cm}}
+\toprule
+\textbf{Campo} & \textbf{Tipo} & \textbf{NULL} & \textbf{Restricción} & \textbf{Descripción} \\
+\midrule
+\endhead
+id & BIGINT UNSIGNED & No & PK & Identificador de la etapa. \\
+codigo & VARCHAR(40) & No & UNIQUE & Código lógico de etapa. \\
+nombre & VARCHAR(80) & No &  & Nombre descriptivo de la etapa. \\
+orden & INT & No &  & Orden del flujo para reportes y control. \\
+es\_terminal & TINYINT(1) & No &  & Indicador de etapa terminal (cierre). \\
+\bottomrule
+\end{longtable}
+
+% ---------- archivos ----------
+\subsection{\texttt{archivos}}
+\begin{longtable}{L{3.2cm} L{3.2cm} C{1.2cm} L{2.6cm} L{5.2cm}}
+\toprule
+\textbf{Campo} & \textbf{Tipo} & \textbf{NULL} & \textbf{Restricción} & \textbf{Descripción} \\
+\midrule
+\endhead
+id & BIGINT UNSIGNED & No & PK & Identificador del archivo. \\
+tipo & VARCHAR(20) & No & CHECK & Tipo de archivo (foto, firma, huella, pdf, acuse). \\
+ruta & VARCHAR(255) & No &  & Ruta o ubicación del archivo en almacenamiento. \\
+sha256 & CHAR(64) & No & UNIQUE & Hash de integridad del archivo. \\
+mime & VARCHAR(80) & Sí &  & Tipo MIME del archivo. \\
+tamano\_bytes & BIGINT UNSIGNED & Sí &  & Tamaño del archivo en bytes. \\
+created\_at & DATETIME & Sí &  & Fecha de creación del registro. \\
+\bottomrule
+\end{longtable}
+
+% ---------- alumnos ----------
+\subsection{\texttt{alumnos}}
+\begin{longtable}{L{3.2cm} L{3.2cm} C{1.2cm} L{2.6cm} L{5.2cm}}
+\toprule
+\textbf{Campo} & \textbf{Tipo} & \textbf{NULL} & \textbf{Restricción} & \textbf{Descripción} \\
+\midrule
+\endhead
+id & BIGINT UNSIGNED & No & PK & Identificador interno del alumno. \\
+numero\_control & VARCHAR(20) & Sí & UNIQUE & Identificador institucional (alumno inscrito). \\
+numero\_ficha & VARCHAR(20) & Sí & UNIQUE & Identificador de nuevo ingreso (solicitante). \\
+nombre\_completo & VARCHAR(140) & No &  & Nombre completo del alumno. \\
+carrera\_clave & VARCHAR(20) & Sí &  & Clave de carrera. \\
+carrera\_nombre & VARCHAR(120) & Sí &  & Nombre de carrera. \\
+foto\_archivo\_id & BIGINT UNSIGNED & Sí & FK(\texttt{archivos}) & Referencia a la fotografía vigente. \\
+firma\_archivo\_id & BIGINT UNSIGNED & Sí & FK(\texttt{archivos}) & Referencia a la firma vigente. \\
+huella\_archivo\_id & BIGINT UNSIGNED & Sí & FK(\texttt{archivos}) & Referencia a la huella vigente. \\
+created\_at & DATETIME & Sí &  & Fecha de creación del registro. \\
+updated\_at & DATETIME & Sí &  & Fecha de última actualización. \\
+\bottomrule
+\end{longtable}
+
+% ---------- turnos ----------
+\subsection{\texttt{turnos}}
+\begin{longtable}{L{3.2cm} L{3.2cm} C{1.2cm} L{2.8cm} L{5.0cm}}
+\toprule
+\textbf{Campo} & \textbf{Tipo} & \textbf{NULL} & \textbf{Restricción} & \textbf{Descripción} \\
+\midrule
+\endhead
+id & BIGINT UNSIGNED & No & PK & Identificador interno del turno. \\
+folio & VARCHAR(32) & No & UNIQUE & Folio del turno (utilizado en el QR). \\
+alumno\_id & BIGINT UNSIGNED & No & FK(\texttt{alumnos}) & Alumno propietario del turno. \\
+estatus\_turno\_id & BIGINT UNSIGNED & No & FK(\texttt{cat\_estatus\_turno}) & Estatus administrativo del turno. \\
+etapa\_actual\_id & BIGINT UNSIGNED & No & FK(\texttt{cat\_etapas}) & Etapa actual del proceso. \\
+es\_activo & TINYINT(1) & Sí & UNIQUE (con alumno\_id) & Indicador técnico de turno vigente (1) o histórico (NULL). \\
+fecha\_expira & DATETIME & No &  & Fecha y hora de expiración del turno. \\
+qr\_token\_hash & CHAR(64) & Sí &  & Hash del token asociado al QR. \\
+llamado\_at & DATETIME & Sí &  & Momento en que se llama o atiende el turno. \\
+created\_at & DATETIME & Sí &  & Fecha de creación. \\
+updated\_at & DATETIME & Sí &  & Fecha de última actualización. \\
+\bottomrule
+\end{longtable}
+
+% ---------- turno_eventos ----------
+\subsection{\texttt{turno\_eventos}}
+\begin{longtable}{L{3.2cm} L{3.2cm} C{1.2cm} L{2.8cm} L{5.0cm}}
+\toprule
+\textbf{Campo} & \textbf{Tipo} & \textbf{NULL} & \textbf{Restricción} & \textbf{Descripción} \\
+\midrule
+\endhead
+id & BIGINT UNSIGNED & No & PK & Identificador del evento. \\
+turno\_id & BIGINT UNSIGNED & No & FK(\texttt{turnos}) & Turno asociado al evento. \\
+tipo\_evento & VARCHAR(40) & No &  & Tipo de evento registrado. \\
+etapa\_anterior\_id & BIGINT UNSIGNED & Sí & FK(\texttt{cat\_etapas}) & Etapa previa (si aplica). \\
+etapa\_nueva\_id & BIGINT UNSIGNED & Sí & FK(\texttt{cat\_etapas}) & Etapa nueva (si aplica). \\
+estatus\_anterior\_id & BIGINT UNSIGNED & Sí & FK(\texttt{cat\_estatus\_turno}) & Estatus previo (si aplica). \\
+estatus\_nuevo\_id & BIGINT UNSIGNED & Sí & FK(\texttt{cat\_estatus\_turno}) & Estatus nuevo (si aplica). \\
+usuario\_id & BIGINT UNSIGNED & Sí & FK(\texttt{usuarios}) & Usuario responsable (si aplica). \\
+detalle\_json & JSON & Sí &  & Detalle adicional estructurado del evento. \\
+created\_at & DATETIME & No &  & Fecha y hora del evento. \\
+\bottomrule
+\end{longtable}
+
+% ---------- sesiones_captura ----------
+\subsection{\texttt{sesiones\_captura}}
+\begin{longtable}{L{3.2cm} L{3.2cm} C{1.2cm} L{2.8cm} L{5.0cm}}
+\toprule
+\textbf{Campo} & \textbf{Tipo} & \textbf{NULL} & \textbf{Restricción} & \textbf{Descripción} \\
+\midrule
+\endhead
+id & BIGINT UNSIGNED & No & PK & Identificador de la sesión. \\
+turno\_id & BIGINT UNSIGNED & No & FK(\texttt{turnos}) & Turno asociado a la sesión. \\
+usuario\_id & BIGINT UNSIGNED & Sí & FK(\texttt{usuarios}) & Usuario que realizó la captura (si aplica). \\
+iniciada\_at & DATETIME & No &  & Fecha y hora de inicio. \\
+finalizada\_at & DATETIME & Sí &  & Fecha y hora de finalización. \\
+observaciones & VARCHAR(255) & Sí &  & Observaciones operativas. \\
+created\_at & DATETIME & Sí &  & Fecha de creación. \\
+updated\_at & DATETIME & Sí &  & Fecha de última actualización. \\
+\bottomrule
+\end{longtable}
+
+% ---------- evidencias_captura ----------
+\subsection{\texttt{evidencias\_captura}}
+\begin{longtable}{L{3.2cm} L{3.2cm} C{1.2cm} L{2.8cm} L{5.0cm}}
+\toprule
+\textbf{Campo} & \textbf{Tipo} & \textbf{NULL} & \textbf{Restricción} & \textbf{Descripción} \\
+\midrule
+\endhead
+id & BIGINT UNSIGNED & No & PK & Identificador de la evidencia. \\
+turno\_id & BIGINT UNSIGNED & No & FK(\texttt{turnos}) & Turno asociado. \\
+sesion\_captura\_id & BIGINT UNSIGNED & No & FK(\texttt{sesiones\_captura}) & Sesión que generó la evidencia. \\
+tipo & VARCHAR(20) & No & CHECK & Tipo de evidencia (foto, firma o huella). \\
+archivo\_id & BIGINT UNSIGNED & No & FK(\texttt{archivos}) & Archivo asociado. \\
+es\_final & TINYINT(1) & No &  & Indicador de evidencia final. \\
+reemplaza\_evidencia\_id & BIGINT UNSIGNED & Sí & FK(\texttt{evidencias\_captura}) & Evidencia reemplazada (si aplica). \\
+created\_at & DATETIME & No &  & Fecha y hora de registro. \\
+\bottomrule
+\end{longtable}
+
+% ---------- validaciones_personal ----------
+\subsection{\texttt{validaciones\_personal}}
+\begin{longtable}{L{3.2cm} L{3.2cm} C{1.2cm} L{2.8cm} L{5.0cm}}
+\toprule
+\textbf{Campo} & \textbf{Tipo} & \textbf{NULL} & \textbf{Restricción} & \textbf{Descripción} \\
+\midrule
+\endhead
+id & BIGINT UNSIGNED & No & PK & Identificador de validación. \\
+turno\_id & BIGINT UNSIGNED & No & FK(\texttt{turnos}) & Turno validado. \\
+usuario\_id & BIGINT UNSIGNED & No & FK(\texttt{usuarios}) & Usuario validador. \\
+resultado & VARCHAR(20) & No & CHECK & Resultado (aprobado, recaptura, rechazado). \\
+motivo & VARCHAR(255) & Sí &  & Motivo u observación. \\
+created\_at & DATETIME & No &  & Fecha y hora de la validación. \\
+\bottomrule
+\end{longtable}
+
+% ---------- credenciales_pdf ----------
+\subsection{\texttt{credenciales\_pdf}}
+\begin{longtable}{L{3.2cm} L{3.2cm} C{1.2cm} L{2.8cm} L{5.0cm}}
+\toprule
+\textbf{Campo} & \textbf{Tipo} & \textbf{NULL} & \textbf{Restricción} & \textbf{Descripción} \\
+\midrule
+\endhead
+id & BIGINT UNSIGNED & No & PK & Identificador del PDF. \\
+turno\_id & BIGINT UNSIGNED & No & UNIQUE + FK(\texttt{turnos}) & Turno asociado (único). \\
+archivo\_pdf\_id & BIGINT UNSIGNED & No & FK(\texttt{archivos}) & Archivo PDF generado. \\
+generado\_por\_usuario\_id & BIGINT UNSIGNED & Sí & FK(\texttt{usuarios}) & Usuario que generó el PDF (si aplica). \\
+created\_at & DATETIME & No &  & Fecha y hora de generación. \\
+\bottomrule
+\end{longtable}
+
+% ---------- impresiones ----------
+\subsection{\texttt{impresiones}}
+\begin{longtable}{L{3.2cm} L{3.2cm} C{1.2cm} L{2.8cm} L{5.0cm}}
+\toprule
+\textbf{Campo} & \textbf{Tipo} & \textbf{NULL} & \textbf{Restricción} & \textbf{Descripción} \\
+\midrule
+\endhead
+id & BIGINT UNSIGNED & No & PK & Identificador del intento. \\
+turno\_id & BIGINT UNSIGNED & No & FK(\texttt{turnos}) & Turno impreso. \\
+usuario\_id & BIGINT UNSIGNED & No & FK(\texttt{usuarios}) & Usuario que realiza la impresión. \\
+resultado & VARCHAR(10) & No & CHECK & Resultado (exito o fallo). \\
+detalle\_fallo & VARCHAR(255) & Sí &  & Detalle del fallo si ocurre. \\
+created\_at & DATETIME & No &  & Fecha y hora del intento. \\
+\bottomrule
+\end{longtable}
+
+% ---------- acuses_entrega ----------
+\subsection{\texttt{acuses\_entrega}}
+\begin{longtable}{L{3.2cm} L{3.2cm} C{1.2cm} L{2.8cm} L{5.0cm}}
+\toprule
+\textbf{Campo} & \textbf{Tipo} & \textbf{NULL} & \textbf{Restricción} & \textbf{Descripción} \\
+\midrule
+\endhead
+id & BIGINT UNSIGNED & No & PK & Identificador del acuse. \\
+turno\_id & BIGINT UNSIGNED & No & UNIQUE + FK(\texttt{turnos}) & Turno asociado (único). \\
+archivo\_acuse\_id & BIGINT UNSIGNED & Sí & FK(\texttt{archivos}) & Archivo del acuse (si existe). \\
+firma\_acuse\_archivo\_id & BIGINT UNSIGNED & Sí & FK(\texttt{archivos}) & Firma del acuse (si aplica). \\
+firmado\_at & DATETIME & Sí &  & Fecha y hora de firma. \\
+entregado\_at & DATETIME & Sí &  & Fecha y hora de entrega. \\
+created\_at & DATETIME & No &  & Fecha y hora de registro. \\
+\bottomrule
+\end{longtable}
+
+% ---------- incidencias ----------
+\subsection{\texttt{incidencias}}
+\begin{longtable}{L{3.2cm} L{3.2cm} C{1.2cm} L{2.8cm} L{5.0cm}}
+\toprule
+\textbf{Campo} & \textbf{Tipo} & \textbf{NULL} & \textbf{Restricción} & \textbf{Descripción} \\
+\midrule
+\endhead
+id & BIGINT UNSIGNED & No & PK & Identificador de la incidencia. \\
+turno\_id & BIGINT UNSIGNED & No & FK(\texttt{turnos}) & Turno asociado. \\
+usuario\_id & BIGINT UNSIGNED & Sí & FK(\texttt{usuarios}) & Usuario relacionado (si aplica). \\
+etapa\_id & BIGINT UNSIGNED & Sí & FK(\texttt{cat\_etapas}) & Etapa relacionada (si aplica). \\
+tipo\_incidencia & VARCHAR(20) & No & CHECK & Tipo (datos, impresion, flujo u otro). \\
+descripcion & VARCHAR(500) & No &  & Descripción de la incidencia. \\
+snapshot\_json & JSON & Sí &  & Contexto estructurado de la incidencia. \\
+created\_at & DATETIME & No &  & Fecha y hora de registro. \\
+\bottomrule
+\end{longtable}
+
+\end{document}

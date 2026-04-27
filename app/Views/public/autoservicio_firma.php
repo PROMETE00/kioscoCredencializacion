@@ -35,7 +35,13 @@
       <div class="pt-firma-layout">
 
         <div class="pt-panel pt-panel--main">
-          <div class="pt-kicker">Paso 2 de 2</div>
+          <!-- Stepper de Progreso -->
+          <div class="pt-stepper">
+            <div class="pt-step pt-step--active">1<span>Firma</span></div>
+            <div class="pt-step">2<span>Huella</span></div>
+            <div class="pt-step">3<span>Foto</span></div>
+          </div>
+
           <h2 class="pt-title">Verifica tus datos y captura tu firma</h2>
           <p class="pt-text">
             Revisa que tu información sea correcta, confirma tus datos y firma con tu <strong>dedo</strong> en el recuadro.
@@ -134,6 +140,16 @@
 </footer>
 
 <style>
+/* ── Stepper de Progreso ── */
+.pt-stepper { display: flex; justify-content: center; gap: 40px; margin-bottom: 25px; position: relative; }
+.pt-stepper::before { content: ""; position: absolute; top: 15px; left: 50%; transform: translateX(-50%); width: 70%; height: 2px; background: #e2e8f0; z-index: 1; }
+.pt-step { position: relative; z-index: 2; width: 32px; height: 32px; background: #fff; border: 2px solid #e2e8f0; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; color: #64748b; }
+.pt-step span { position: absolute; top: 38px; left: 50%; transform: translateX(-50%); font-size: 11px; white-space: nowrap; color: #64748b; font-weight: 700; text-transform: uppercase; }
+.pt-step--active { border-color: #2F6DF6; background: #2F6DF6; color: #fff; }
+.pt-step--active span { color: #2F6DF6; }
+.pt-step--done { border-color: #16a34a; background: #16a34a; color: #fff; }
+.pt-step--done span { color: #16a34a; }
+
 /* ── Signature capture layout (single column) ──── */
 .pt-firma-layout {
   max-width: 720px;

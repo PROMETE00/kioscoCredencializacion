@@ -15,10 +15,27 @@ $routes->group('', ['namespace' => 'App\Modules\PublicPortal\Controllers'], stat
     $routes->post('turno/generar', 'TicketController::generateTicket'); // Corregido: generate -> generateTicket
     $routes->post('turno/firma', 'TicketController::savePublicSignature');
     $routes->post('turno/foto', 'TicketController::savePublicPhoto');
-
+    $routes->get('foto', 'TicketController::photo');
+    $routes->post('turno/Fingerprint', 'FingerprintController::registerChallenge');
+    $routes->post('fingerprint/registerChallenge',  'FingerprintController::registerChallenge');
+    $routes->post('fingerprint/Verifyregister',  'FingerprintController::Verifyregister');
+    $routes->post('fingerprint/authChallenge',      'FingerprintController::authChallenge');
+    $routes->post('fingerprint/Verifyauth',      'FingerprintController::Verifyauth');
+    $routes->post('fingerprint/existFingerprint',   'FingerprintController::existFingerprint');
     $routes->get('t/(:segment)', 'TicketController::status/$1');
     $routes->get('t/(:segment)/json', 'TicketController::statusJson/$1');
     $routes->get('turno/pdf/(:segment)', 'TicketController::downloadPdf/$1');
+
+    // Rutas para Huella / WebAuthn (Autoservicio)
+    $routes->get('huella', 'FingerprintController::index');
+    $routes->post('huella/tiene-huella', 'FingerprintController::existFingerprint');
+    $routes->post('huella/registro-challenge', 'FingerprintController::registerChallenge');
+    $routes->post('huella/registro-verificar', 'FingerprintController::Verifyregister');
+    $routes->post('huella/auth-challenge', 'FingerprintController::authChallenge');
+    $routes->post('huella/auth-verificar', 'FingerprintController::Verifyauth');
+    $routes->post('huella/finalizar', 'FingerprintController::finishFlow');
+    $routes->post('huella/guardar', 'TicketController::savePublicSignature'); // Reutilizamos la lógica de guardado de firma
+    
 });
 
 // 2. AUTHENTICATION
