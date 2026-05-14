@@ -6,9 +6,6 @@
 # Documentation
 *.md
 !README.md
-ARCHITECTURE.md
-BEST_PRACTICES.md
-GEMINI.md
 
 # Environment files
 .env

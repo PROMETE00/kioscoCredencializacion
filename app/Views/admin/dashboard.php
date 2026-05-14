@@ -33,11 +33,12 @@
             <th>FOTO</th>
             <th>FIRMA</th>
             <th>IMPRIME</th>
+            <th>ENTREGA</th>
           </tr>
         </thead>
         <tbody id="dashboardRows">
         <?php if (empty($worklist)): ?>
-          <tr><td colspan="8" class="d-empty">No se encontraron alumnos para este filtro.</td></tr>
+          <tr><td colspan="9" class="d-empty">No se encontraron alumnos para este filtro.</td></tr>
         <?php else: ?>
           <?php foreach ($worklist as $r): ?>
             <tr>
@@ -73,6 +74,11 @@
               <td style="text-align: center;">
                 <a href="<?= base_url('admin/credencial/imprimir/' . esc((string) ($r['student_id'] ?? ''))) ?>" target="_blank" class="d-btn d-btn--primary" style="padding: 6px 10px; font-size: 13px; white-space: nowrap;">🖨️ Imprimir</a>
               </td>
+              <td style="text-align: center;">
+                <button type="button" class="d-btn d-btn--success" style="padding: 6px 10px; font-size: 13px; white-space: nowrap;" data-action="deliver" data-ticket-id="<?= esc((string) ($r['ticket_id'] ?? '')) ?>" <?= !empty($r['ticket_id']) && $r['status_code'] !== 'FINISHED' ? '' : 'disabled' ?>>
+                  🤝 Entregar
+                </button>
+              </td>
             </tr>
           <?php endforeach; ?>
         <?php endif; ?>
@@ -88,9 +94,10 @@
 
 <?= $this->section('scripts') ?>
   <script id="dashboardConfig"
-    data-fetch-url="<?= site_url('admin/dashboard/alumnos') ?>"
-    data-status-url="<?= site_url('admin/dashboard/estatus') ?>"
-    data-clear-url="<?= site_url('admin/dashboard/biometrico/eliminar') ?>"
+    data-fetch-url="<?= site_url('admin/dashboard/worklist') ?>"
+    data-status-url="<?= site_url('admin/dashboard/status') ?>"
+    data-clear-url="<?= site_url('admin/dashboard/biometric/clear') ?>"
+    data-delivery-url="<?= site_url('admin/dashboard/delivery') ?>"
     data-csrf-name="<?= csrf_token() ?>"
     data-csrf-hash="<?= csrf_hash() ?>"
   ></script>

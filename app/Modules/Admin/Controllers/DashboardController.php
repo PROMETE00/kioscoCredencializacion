@@ -3,55 +3,56 @@
 namespace App\Modules\Admin\Controllers;
 
 use App\Controllers\BaseController;
-use App\Modules\Admin\Models\DashboardModel;
+use App\Services\AdminService;
 use RuntimeException;
 
 class DashboardController extends BaseController
 {
+    protected AdminService $adminService;
+
+    public function __construct()
+    {
+        $this->adminService = new AdminService();
+    }
+
     public function index()
     {
-        $model = new DashboardModel();
-
         $data = [
-            'kpis'      => $model->getKpis(),
-            'worklist'  => $model->getAdminStudents('', 8),
-            'statusOptions' => $model->getStatusOptions(),
+            'kpis'          => $this->adminService->getKpis(),
+            'worklist'      => $this->adminService->getWorklist('', 8),
+            'statusOptions' => $this->adminService->getStatusOptions(),
         ];
 
         return view('admin/dashboard', $data);
     }
 
-    public function students()
+    public function getWorklist()
     {
         $q = trim((string) ($this->request->getGet('q') ?? ''));
         $limit = (int) ($this->request->getGet('limit') ?? 8);
 
-        $model = new DashboardModel();
-
         return $this->response->setJSON([
             'ok'    => true,
-            'items' => $model->getAdminStudents($q, $limit),
-            'kpis'  => $model->getKpis(),
+            'items' => $this->adminService->getWorklist($q, $limit),
+            'kpis'  => $this->adminService->getKpis(),
         ]);
     }
 
-    public function changeStatus()
+    public function updateStatus()
     {
-        $ticketId = (int) ($this->request->getPost('turno_id') ?? 0);
-        $statusId = (int) ($this->request->getPost('estatus_id') ?? 0);
+        $ticketId = (int) ($this->request->getPost('ticket_id') ?? $this->request->getPost('turno_id') ?? 0);
+        $statusId = (int) ($this->request->getPost('status_id') ?? $this->request->getPost('estatus_id') ?? 0);
 
         if ($ticketId <= 0 || $statusId <= 0) {
             return $this->response->setStatusCode(400)->setJSON([
                 'ok'      => false,
-                'message' => 'Falta el turno o el estatus a actualizar.',
+                'message' => 'Missing ticket ID or status ID.',
                 'csrfHash'=> csrf_hash(),
             ]);
         }
 
-        $model = new DashboardModel();
-
         try {
-            $row = $model->updateTicketStatus($ticketId, $statusId);
+            $row = $this->adminService->updateTicketStatus($ticketId, $statusId);
         } catch (RuntimeException $e) {
             return $this->response->setStatusCode(400)->setJSON([
                 'ok'      => false,
@@ -62,7 +63,7 @@ class DashboardController extends BaseController
 
         return $this->response->setJSON([
             'ok'       => true,
-            'message'  => 'Estatus actualizado correctamente.',
+            'message'  => 'Status updated successfully.',
             'row'      => $row,
             'csrfHash' => csrf_hash(),
         ]);
@@ -70,22 +71,20 @@ class DashboardController extends BaseController
 
     public function clearBiometric()
     {
-        $studentId = (int) ($this->request->getPost('alumno_id') ?? 0);
-        $ticketId = (int) ($this->request->getPost('turno_id') ?? 0);
-        $type = trim((string) ($this->request->getPost('tipo') ?? ''));
+        $studentId = (int) ($this->request->getPost('student_id') ?? $this->request->getPost('alumno_id') ?? 0);
+        $ticketId = (int) ($this->request->getPost('ticket_id') ?? $this->request->getPost('turno_id') ?? 0);
+        $type = trim((string) ($this->request->getPost('type') ?? $this->request->getPost('tipo') ?? ''));
 
         if ($studentId <= 0 || $ticketId <= 0 || $type === '') {
             return $this->response->setStatusCode(400)->setJSON([
                 'ok'      => false,
-                'message' => 'Faltan datos para borrar el biométrico.',
+                'message' => 'Missing data to clear biometric.',
                 'csrfHash'=> csrf_hash(),
             ]);
         }
 
-        $model = new DashboardModel();
-
         try {
-            $row = $model->clearBiometric($studentId, $ticketId, $type);
+            $row = $this->adminService->clearBiometric($studentId, $ticketId, $type);
         } catch (RuntimeException $e) {
             return $this->response->setStatusCode(400)->setJSON([
                 'ok'      => false,
@@ -96,7 +95,39 @@ class DashboardController extends BaseController
 
         return $this->response->setJSON([
             'ok'       => true,
-            'message'  => ucfirst($type) . ' borrada correctamente.',
+            'message'  => ucfirst($type) . ' cleared successfully.',
+            'row'      => $row,
+            'csrfHash' => csrf_hash(),
+        ]);
+    }
+
+    public function recordDelivery()
+    {
+        $studentId    = (int) ($this->request->getPost('student_id') ?? 0);
+        $ticketId     = (int) ($this->request->getPost('ticket_id') ?? 0);
+        $signatureB64 = (string) ($this->request->getPost('signature') ?? '');
+
+        if ($studentId <= 0 || $ticketId <= 0) {
+             return $this->response->setStatusCode(400)->setJSON([
+                'ok'      => false,
+                'message' => 'Missing data for delivery record.',
+                'csrfHash'=> csrf_hash(),
+            ]);
+        }
+
+        try {
+            $row = $this->adminService->recordDelivery($studentId, $ticketId, $signatureB64);
+        } catch (RuntimeException $e) {
+            return $this->response->setStatusCode(400)->setJSON([
+                'ok'      => false,
+                'message' => $e->getMessage(),
+                'csrfHash'=> csrf_hash(),
+            ]);
+        }
+
+        return $this->response->setJSON([
+            'ok'       => true,
+            'message'  => 'Delivery recorded successfully.',
             'row'      => $row,
             'csrfHash' => csrf_hash(),
         ]);
