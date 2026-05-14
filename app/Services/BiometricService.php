@@ -46,6 +46,8 @@ class BiometricService extends BaseService
             throw new RuntimeException("Could not create directory: {$directory}");
         }
 
+        $this->ensureUploadHtaccess($directory);
+
         if (file_put_contents($absolutePath, $binary) === false) {
             throw new RuntimeException('Could not save file to disk.');
         }
@@ -169,5 +171,21 @@ class BiometricService extends BaseService
             }
         }
         return null;
+    }
+
+    protected function ensureUploadHtaccess(string $directory): void
+    {
+        $htaccessPath = $directory . '/.htaccess';
+        if (file_exists($htaccessPath)) {
+            return;
+        }
+
+        $content = "Deny from all\n"
+            . "<FilesMatch \"\\.(jpg|jpeg|png|gif|webp|bmp)$\">\n"
+            . "    Order Allow,Deny\n"
+            . "    Allow from all\n"
+            . "</FilesMatch>\n";
+
+        @file_put_contents($htaccessPath, $content);
     }
 }

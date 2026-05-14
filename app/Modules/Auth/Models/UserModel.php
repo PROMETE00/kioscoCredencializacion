@@ -38,4 +38,17 @@ class UserModel extends Model
                     ->where('is_active', 1)
                     ->first();
     }
+
+    public function findByUsername(string $username): ?array
+    {
+        return $this->where('username', $username)->first();
+    }
+
+    public function listWithRoles(): array
+    {
+        return $this->select('users.*, roles.code as role_code, roles.name as role_name')
+                    ->join('roles', 'roles.id = users.role_id', 'left')
+                    ->orderBy('users.username', 'ASC')
+                    ->findAll();
+    }
 }

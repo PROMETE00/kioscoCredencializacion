@@ -2,7 +2,7 @@
 
 namespace App\Services;
 
-use App\Modules\Admin\Models\UserAdminModel;
+use App\Modules\Auth\Models\UserModel;
 use App\Models\RoleModel;
 use Config\Schema;
 use RuntimeException;
@@ -10,14 +10,14 @@ use RuntimeException;
 class UserService extends BaseService
 {
     protected Schema $schema;
-    protected UserAdminModel $userModel;
+    protected UserModel $userModel;
     protected RoleModel $roleModel;
 
     public function __construct()
     {
         parent::__construct();
         $this->schema = new Schema();
-        $this->userModel = new UserAdminModel();
+        $this->userModel = new UserModel();
         $this->roleModel = new RoleModel();
     }
 
