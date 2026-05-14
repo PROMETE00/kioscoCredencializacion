@@ -2,7 +2,6 @@
 
 namespace App\Services;
 
-use App\Models\TurnoEventoModel;
 use Config\Schema;
 use RuntimeException;
 
