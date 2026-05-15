@@ -397,6 +397,7 @@ class TicketController extends BaseController
         if (!is_dir($dir) && !mkdir($dir, 0775, true) && !is_dir($dir)) {
             throw new \RuntimeException('No se pudo crear el directorio de fotos.');
         }
+        $this->ensureUploadHtaccess($dir);
         if (file_put_contents($absolutePath, $binary) === false) {
             throw new \RuntimeException('No se pudo guardar el archivo físico.');
         }
@@ -487,6 +488,7 @@ class TicketController extends BaseController
         if (!is_dir($dir) && !mkdir($dir, 0775, true) && !is_dir($dir)) {
             throw new \RuntimeException('No se pudo crear el directorio de firmas.');
         }
+        $this->ensureUploadHtaccess($dir);
 
         if (file_put_contents($absolutePath, $binary) === false) {
             throw new \RuntimeException('No se pudo guardar el archivo de firma.');
@@ -862,5 +864,21 @@ class TicketController extends BaseController
                )',
             [$now, $studentId, $now]
         );
+    }
+
+    private function ensureUploadHtaccess(string $directory): void
+    {
+        $htaccessPath = $directory . '/.htaccess';
+        if (file_exists($htaccessPath)) {
+            return;
+        }
+
+        $content = "Deny from all\n"
+            . "<FilesMatch \"\\.(jpg|jpeg|png|gif|webp|bmp)$\">\n"
+            . "    Order Allow,Deny\n"
+            . "    Allow from all\n"
+            . "</FilesMatch>\n";
+
+        @file_put_contents($htaccessPath, $content);
     }
 }
