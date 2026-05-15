@@ -101,7 +101,11 @@ $routes->group('admin', ['namespace' => 'App\Modules\Admin\Controllers', 'filter
     $routes->post('users', 'UserController::store');
 
     // Legacy redirects for compatibility during transition
-    $routes->get('usuarios', 'UserController::index');
-    $routes->get('usuarios/create', 'UserController::create');
-    $routes->get('dashboard/alumnos', 'DashboardController::getWorklist');
+    $routes->addRedirect('usuarios', 'admin/users');
+    $routes->addRedirect('usuarios/create', 'admin/users/create');
+    $routes->addRedirect('dashboard/alumnos', 'admin/dashboard/worklist');
+
+    // Legacy public routes with Spanish segments (302 temporary redirect)
+    $routes->addRedirect('turno', '/');
+    $routes->addRedirect('turnos/general', '/');
 });
